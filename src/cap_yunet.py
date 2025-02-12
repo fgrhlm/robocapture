@@ -5,17 +5,15 @@ import numpy as np
 from capture import RCVideoCapture
 
 def visualize(input, faces):
-    thickness = 1
-
     if faces[1] is not None:
-        for idx, face in enumerate(faces[1]):
-            coords = face[:-1].astype(np.int32)
-            cv.rectangle(input, (coords[0], coords[1]), (coords[0]+coords[2], coords[1]+coords[3]), (0, 255, 0), thickness)
-            cv.circle(input, (coords[4], coords[5]), 2, (255, 0, 0), thickness)
-            cv.circle(input, (coords[6], coords[7]), 2, (0, 0, 255), thickness)
-            cv.circle(input, (coords[8], coords[9]), 2, (0, 255, 0), thickness)
-            cv.circle(input, (coords[10], coords[11]), 2, (255, 0, 255), thickness)
-            cv.circle(input, (coords[12], coords[13]), 2, (0, 255, 255), thickness)
+        for face in faces[1]:
+            coords = [int(n) for n in face[:-1]]
+            cv.rectangle(input, (coords[0], coords[1]), (coords[0]+coords[2], coords[1]+coords[3]), (0, 255, 0), 1)
+            cv.circle(input, (coords[4], coords[5]), 2, (255, 0, 0), 1)
+            cv.circle(input, (coords[6], coords[7]), 2, (0, 0, 255), 1)
+            cv.circle(input, (coords[8], coords[9]), 2, (0, 255, 0), 1)
+            cv.circle(input, (coords[10], coords[11]), 2, (255, 0, 255), 1)
+            cv.circle(input, (coords[12], coords[13]), 2, (0, 255, 255), 1)
 
 if __name__=="__main__":
     if len(sys.argv) != 2:
@@ -23,8 +21,7 @@ if __name__=="__main__":
 
     yunet_model_path = sys.argv[1]
 
-    cap = RCVideoCapture()
-    cap.from_file("media/test.mp4")
+    cap = RCVideoCapture("media/test.mp4")
 
     # Yunet load
     yunet_model = cv.FaceDetectorYN.create(
