@@ -1,11 +1,14 @@
 import cv2 as cv
 
+from utils.logger import logger
+
 class RCVideoCapture:
     def __init__(self, cap):
         self.device = None
         self.frame_width = 0
         self.frame_height = 0
         self.cap = self.open(cap)
+        self.fps = 0
 
     def open(self, path):
         cap = cv.VideoCapture(path)
@@ -14,9 +17,7 @@ class RCVideoCapture:
         
         return cap
 
-    def process(self, f):
-        print(f"Capture\n  Frame Width: {self.frame_width}\n  Frame Height: {self.frame_height}")
-        
+    def process(self, f, _queue=None):
         tm = cv.TickMeter()
 
         while self.cap.isOpened():
@@ -26,11 +27,12 @@ class RCVideoCapture:
             if not ret:
                 break
             
-            f(frame)
-            tm.stop()
-            print(tm.getFPS())
+            f(frame,_queue=_queue)
 
             if cv.waitKey(1) == ord('x'):
                 break
+            
+            tm.stop()
+            self.fps = tm.getFPS()
 
         self.cap.release()
