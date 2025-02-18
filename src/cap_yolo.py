@@ -10,7 +10,7 @@ from utils.logger import logger, LogLevel
 # https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html
 # https://docs.ultralytics.com/modes/predict/
 # https://www.geeksforgeeks.org/object-detection-with-yolo-and-opencv/
-# https://docs.python.org/3/library/queue.html#queue.SimpleQueue
+# https://github.com/ultralytics/ultralytics/blob/main/docs/en/usage/simple-utilities.md
 
 class RCYolo:
     def __init__(self, yolo_path):

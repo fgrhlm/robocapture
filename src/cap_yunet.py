@@ -4,6 +4,9 @@ import numpy as np
 
 from capture import RCVideoCapture
 
+# https://docs.opencv.org/4.x/df/d20/classcv_1_1FaceDetectorYN.html
+# https://opencv.org/blog/opencv-face-detection-cascade-classifier-vs-yunet/
+
 class RCYunet:
     def __init__(self, yunet_path, cap_size):
         self.path = yunet_path
