@@ -2,5 +2,6 @@ venv/
 models/
 **/__pycache__/
 **/.pytest_cache/
-**/.coverage
+tests/.coverage
+.coverage
 docs/build/
