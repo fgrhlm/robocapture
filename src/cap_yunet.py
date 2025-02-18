@@ -4,44 +4,31 @@ import numpy as np
 
 from capture import RCVideoCapture
 
-def visualize(input, faces):
-    if faces[1] is not None:
-        for face in faces[1]:
-            coords = [int(n) for n in face[:-1]]
-            cv.rectangle(input, (coords[0], coords[1]), (coords[0]+coords[2], coords[1]+coords[3]), (0, 255, 0), 1)
-            cv.circle(input, (coords[4], coords[5]), 2, (255, 0, 0), 1)
-            cv.circle(input, (coords[6], coords[7]), 2, (0, 0, 255), 1)
-            cv.circle(input, (coords[8], coords[9]), 2, (0, 255, 0), 1)
-            cv.circle(input, (coords[10], coords[11]), 2, (255, 0, 255), 1)
-            cv.circle(input, (coords[12], coords[13]), 2, (0, 255, 255), 1)
+class RCYunet:
+    def __init__(self, yunet_path, cap_size):
+        self.path = yunet_path
 
-if __name__=="__main__":
-    if len(sys.argv) != 2:
-        exit()
+        self.model = cv.FaceDetectorYN.create(
+            yunet_path,
+            "",
+            (320,320),
+            0.6,
+            0.3,
+            5000
+        )
 
-    yunet_model_path = sys.argv[1]
+        self.model.setInputSize(cap_size)
 
-    cap = RCVideoCapture("media/test.mp4")
+    def detect(self, frame):
+        results = self.model.detect(frame)
+       
+        try:
+            r = []
+            if results[0] > 1:
+                for n in results[1]:
+                    r.append({"face": float(n[-1])})
+        except TypeError:
+            print(type(results))
+            print(results)
 
-    # Yunet load
-    yunet_model = cv.FaceDetectorYN.create(
-        yunet_model_path,
-        "",
-        (320, 320),
-        0.6,
-        0.3,
-        5000
-    )
-
-    yunet_model.setInputSize([cap.frame_width, cap.frame_height])
-
-    # Inference
-    def infer(frame):
-        yunet_results = yunet_model.detect(frame)
-        
-        visualize(frame, yunet_results)
-        cv.imshow("test", frame)
-
-    cap.process(infer)
-
-    cv.destroyAllWindows()
+        return r

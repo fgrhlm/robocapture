@@ -4,6 +4,7 @@
 import socket
 import sys
 import queue
+import json
 
 from utils.logger import logger, LogLevel
 
@@ -15,6 +16,7 @@ class APISocket:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.settimeout(1)
         except socket.error as e:
             logger("APISocket", f"Could not create socket: {e}", level=LogLevel.FATAL)
             logger("APISocket", f"Terminating! Goodbye!", level=LogLevel.FATAL)
@@ -22,21 +24,26 @@ class APISocket:
 
         self.socket.bind(("", self.port))
 
-    def listen(self,_queue=None):
+    def listen(self,results_queue=None,stop_event=None):
         self.socket.listen(5)
         logger("APISocket", f"Listening on {self.port}..")
         
-        while not self.stop:
-            client_socket, client_addr = self.socket.accept()
+        while not stop_event.is_set():
+            try:
+                client_socket, client_addr = self.socket.accept()
+            except socket.timeout:
+                continue
+
             logger("APISocket", f"{client_addr[0]} connected!")
 
-            if not _queue:
+            if not results_queue:
                 continue
 
             while True:
                 try:
                     # Pop result from the queue
-                    payload = _queue.get()
+                    payload = results_queue.get()
+                    payload = json.dumps(payload)
 
                     payload.replace(" ","")
                     payload.replace("\t","")

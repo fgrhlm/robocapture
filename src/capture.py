@@ -9,6 +9,7 @@ class RCVideoCapture:
         self.frame_height = 0
         self.cap = self.open(cap)
         self.fps = 0
+        self.stop = False
 
     def open(self, path):
         cap = cv.VideoCapture(path)
@@ -16,18 +17,21 @@ class RCVideoCapture:
         self.frame_height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
         
         return cap
+    
+    def close(self):
+        self.cap.release()
 
-    def process(self, f, _queue=None):
+    def process(self, f, stop_event=None):
         tm = cv.TickMeter()
 
-        while self.cap.isOpened():
+        while self.cap.isOpened() and not stop_event.is_set():
             tm.start()
             ret, frame = self.cap.read()
 
             if not ret:
                 break
             
-            f(frame,_queue=_queue)
+            f(frame)
 
             if cv.waitKey(1) == ord('x'):
                 break
@@ -35,4 +39,4 @@ class RCVideoCapture:
             tm.stop()
             self.fps = tm.getFPS()
 
-        self.cap.release()
+        self.close()

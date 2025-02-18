@@ -30,20 +30,25 @@ class RoboCaptureClient:
             try:
                 bufsize = 1024
 
-                payload = self.socket.recv(bufsize)
+                response = self.socket.recv(bufsize)
                 
-                while payload[-3:] != b'\n\n\n':
-                    payload += self.socket.recv(bufsize)
+                while response[-3:] != b'\n\n\n':
+                    response += self.socket.recv(bufsize)
                 
-                payload = payload.decode()
+                response = response.decode()
                 
                 try:
-                    obj = json.loads(payload)
-                    obj = [f"{n['name']}: {n['confidence']}" for n in obj]
+                    response = json.loads(response)
                     os.system("clear")
-                    print("\n".join(obj))
-                except:
-                    print(f"EXCEPTION: {payload}")
+                    print("Objects:")
+                    for n in response["yolo"]:
+                        print(f"{n}")
+
+                    print("\nFaces:")
+                    for n in response["yunet"]:
+                        print(f"{n}")
+                except Exception as e:
+                    print(f"EXCEPTION: {e}")
             except KeyboardInterrupt:
                 break
 

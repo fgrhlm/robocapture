@@ -12,27 +12,23 @@ from utils.logger import logger, LogLevel
 # https://www.geeksforgeeks.org/object-detection-with-yolo-and-opencv/
 # https://docs.python.org/3/library/queue.html#queue.SimpleQueue
 
-class YOLOCapture:
-    def __init__(self, yolo_path, source):
+class RCYolo:
+    def __init__(self, yolo_path):
         self.path = yolo_path
-        self.cap = RCVideoCapture(source)
         self.model = YOLO(yolo_path)
 
-    def detect(self, frame, _queue=None):
+    def detect(self, frame):
         results = self.model(frame, verbose = False)
-        results_json = results[0].to_json()
 
-        if _queue:
-            try:
-                if len(results_json) > 0:
-                    _queue.put(results_json)
-            except queue.Full:
-                logger("YOLOCapture", "Queue is full!", level=LogLevel.WARNING)
-   
-    def run(self,_queue=None):
-        logger("YOLOCapture", "Running..")
+        r = []
+        for n in results:
+            classes = n.boxes.cls.cpu().numpy()
+            confs = n.boxes.conf.cpu().numpy()
+            boxes = n.boxes.xyxy.cpu().numpy()
 
-        self.cap.process(self.detect, _queue=_queue)
-        cv.destroyAllWindows()
-
-        logger("YOLOCapture", "Goodbye!")
+            for _class, _conf, _box in zip(classes, confs, boxes):
+                r.append({
+                    self.model.names[int(_class)]: float(_conf)
+                })
+        
+        return r 
