@@ -3,6 +3,7 @@ import cv2 as cv
 import numpy as np
 
 from capture import RCVideoCapture
+from result import RCYunetResults
 
 # https://docs.opencv.org/4.x/df/d20/classcv_1_1FaceDetectorYN.html
 # https://opencv.org/blog/opencv-face-detection-cascade-classifier-vs-yunet/
@@ -22,16 +23,9 @@ class RCYunet:
 
         self.model.setInputSize(cap_size)
 
-    def detect(self, frame):
-        results = self.model.detect(frame)
-       
-        try:
-            r = []
-            if results[0] > 1:
-                for n in results[1]:
-                    r.append({"face": float(n[-1])})
-        except TypeError:
-            print(type(results))
-            print(results)
+    def detect(self, frame) -> RCYunetResults:
+        results: list[int, list] = self.model.detect(frame)
+        results: RCYunetResults = RCYunetResults(results)
 
-        return r
+        return results
+       

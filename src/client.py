@@ -40,13 +40,16 @@ class RoboCaptureClient:
                 try:
                     response = json.loads(response)
                     os.system("clear")
+
                     print("Objects:")
                     for n in response["yolo"]:
                         print(f"{n}")
+                        pass
 
                     print("\nFaces:")
                     for n in response["yunet"]:
                         print(f"{n}")
+
                 except Exception as e:
                     print(f"EXCEPTION: {e}")
             except KeyboardInterrupt:

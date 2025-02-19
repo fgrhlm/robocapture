@@ -5,6 +5,8 @@ import queue
 
 from capture import RCVideoCapture
 from ultralytics import YOLO
+from ultralytics.engine.results import Results
+from result import RCYoloResults
 from utils.logger import logger, LogLevel
 
 # https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html
@@ -13,22 +15,17 @@ from utils.logger import logger, LogLevel
 # https://github.com/ultralytics/ultralytics/blob/main/docs/en/usage/simple-utilities.md
 
 class RCYolo:
+    """Thin wrapper around ultralytics YOLO model."""
     def __init__(self, yolo_path):
-        self.path = yolo_path
-        self.model = YOLO(yolo_path)
+        self.path: str = yolo_path
+        """Path to the yolo model"""
+        self.model: YOLO = YOLO(yolo_path)
+        """YOLO model object"""
 
-    def detect(self, frame):
-        results = self.model(frame, verbose = False)
+    def detect(self, frame) -> RCYoloResults:
+        """Runs inference on **`frame`** and returns the results"""
+        results: Results = self.model(frame, verbose = False)
+        results: RCYoloResults = RCYoloResults(results, self.model.names)
 
-        r = []
-        for n in results:
-            classes = n.boxes.cls.cpu().numpy()
-            confs = n.boxes.conf.cpu().numpy()
-            boxes = n.boxes.xyxy.cpu().numpy()
+        return results
 
-            for _class, _conf, _box in zip(classes, confs, boxes):
-                r.append({
-                    self.model.names[int(_class)]: float(_conf)
-                })
-        
-        return r 
