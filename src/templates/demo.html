@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RoboCapture Demo Client</title>
+  </head>
+  <body>
+    <h1>RoboCapture Demo Client</h1>
+    <hr>
+    <div id="results">
+      <div id="frame-container">
+        <canvas id="frame-canvas" width="640" height="480">
+      </div>
+      <hr>
+      <div id="detection">
+        <div id="yolo">
+          <h4>Yolo</h4>
+          <pre id="yolo-data"></pre>
+        </div>
+        <div id="yunet">
+          <h4>Yunet</h4>
+          <pre id="yunet-data"></pre>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      const elemYolo = document.getElementById("yolo-data");
+      const elemYunet = document.getElementById("yunet-data");
+      const elemFrame = document.getElementById("frame");
+      const canvas = document.getElementById("frame-canvas")
+      const ctx = canvas.getContext("2d");
+
+      const socket = new WebSocket("ws://localhost:8080");
+
+      socket.addEventListener("open", e => {
+        console.log("Connection opened!");
+      });
+
+      socket.addEventListener("message", e => {
+        res = JSON.parse(e.data);
+        elemYolo.textContent = JSON.stringify(res.yolo, undefined, 2);
+        elemYunet.textContent = JSON.stringify(res.yunet, undefined, 2);
+
+        let frameImg = new Image()
+        frameImg.src = `data:image/jpeg;charset=utf-8;base64, ${res.frame}`
+        frameImg.addEventListener("load", e => {
+          ctx.drawImage(frameImg, 0, 0, frameImg.width, frameImg.height, 0, 0, canvas.width, canvas.height);
+        })
+      })
+    </script>
+    <style>
+      html, body {
+        padding: 20px;
+        font-family: sans-serif;
+      }
+
+      hr {
+        width: 100%;
+        border: 1px solid black;
+      }
+
+      pre {
+        padding: 10px;
+        background-color: black;
+        color: white;
+      }
+
+      #frame-canvas {
+        border: 3px;
+        border-color: black;
+        border-style: solid;
+        min-height: 480px;
+        min-width: 640px;
+      }
+
+      #results {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      } 
+
+      #frame-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      #detection {
+        display: flex;
+        width: 100%;
+      }
+
+      #yolo, #yunet { width: 50%; margin: 10px; }
+
+      .green { background-color: #44FF44; }
+      .red { background-color: #FF4444; }
+    </style>
+  </body>
+</html>

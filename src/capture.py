@@ -1,9 +1,10 @@
 import cv2 as cv
+import sys
 
 from collections.abc import Callable
 from threading import Event
 
-from utils.logger import logger
+from utils.logger import logger, LogLevel
 
 class RCVideoCapture:
     """Thin wrapper around OpenCV's VideoCapture, with some additional functionality."""
@@ -30,9 +31,14 @@ class RCVideoCapture:
         https://docs.opencv.org/4.x/d8/dfe/classcv_1_1VideoCapture.html
 
         """
-        cap: cv.VideoCapture = cv.VideoCapture(path)
-        self.frame_width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
-        self.frame_height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+        try:
+            cap: cv.VideoCapture = cv.VideoCapture(path)
+            self.frame_width = int(cap.get(cv.CAP_PROP_FRAME_WIDTH))
+            self.frame_height = int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))
+            logger("RCVideoCapture", "Capture opened!")
+        except:
+            logger("RCVideoCapture", "Could not open VideoCapture.",level=LogLevel.FATAL)
+            sys.exit(1)
         
         return cap
     
@@ -40,8 +46,8 @@ class RCVideoCapture:
         """Close capture"""
         self.cap.release()
 
-    def process(self, f: Callable, stop_event: Event = None):
-        """Executes function **`f(frame)`** every new frame. Loops until Capture is closed or **`stop_event`** is set."""
+    def process(self, f: Callable, stop_event: Event=None):
+        """Executes function **`f(frame)`** every new frame"""
         tm = cv.TickMeter()
 
         while self.cap.isOpened() and not stop_event.is_set():

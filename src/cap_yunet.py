@@ -4,6 +4,7 @@ import numpy as np
 
 from capture import RCVideoCapture
 from result import RCYunetResults
+from utils.logger import logger
 
 # https://docs.opencv.org/4.x/df/d20/classcv_1_1FaceDetectorYN.html
 # https://opencv.org/blog/opencv-face-detection-cascade-classifier-vs-yunet/
