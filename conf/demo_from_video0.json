@@ -1,0 +1,14 @@
+{
+    "videoCapture": {
+        "device": "/dev/video0"
+    },
+    "yolo": {
+        "chkpt": "models/yolov10n.pt"
+    },
+    "yunet": {
+        "chkpt": "models/face_detection_yunet_2023mar_int8bq.onnx"
+    },
+    "websocket": {
+        "port": 9001
+    }
+}

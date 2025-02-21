@@ -26,8 +26,8 @@ RCFramesQueue: Queue = Queue(maxsize=5)
 # Signaling
 RCStopEvent: Event = Event()
 
-def worker_detect(yolo_path,yunet_path,stop_event):
-    cap: RCVideoCapture = RCVideoCapture("media/test.mp4")
+def worker_detect(device,yolo_path,yunet_path,stop_event):
+    cap: RCVideoCapture = RCVideoCapture(device)
     yolo: RCYolo = RCYolo(yolo_path)
     yunet: RCYunet = RCYunet(yunet_path, (cap.frame_width, cap.frame_height))
 
@@ -41,12 +41,12 @@ def worker_detect(yolo_path,yunet_path,stop_event):
         try:
             RCResultsQueue.put(results)
         except Full:
-            logger("RoboCaptureServer", "Results Queue is full!", level=LogLevel.WARNING)
+            logger("RCServer", "Results Queue is full!", level=LogLevel.WARNING)
 
         try:
             RCFramesQueue.put(b64_frame)
         except Full:
-            logger("RoboCaptureServer", "Frames Queue is full!", level=LogLevel.WARNING)
+            logger("RCServer", "Frames Queue is full!", level=LogLevel.WARNING)
 
     cap.process(process, stop_event=stop_event)
 
@@ -56,23 +56,36 @@ def worker_socket(port,stop_event):
     api.start_socket(results_queue=RCResultsQueue, frames_queue=RCFramesQueue, stop_event=stop_event)
 
 if __name__=="__main__":
-    if len(sys.argv) != 4:
-        print("USAGE: $ server.py <yolo_path> <yunet_path> <api port>")
+    if len(sys.argv) != 2:
+        print("USAGE: $ server.py <config file>")
         exit(1)
+   
+    config_path = sys.argv[1]
     
+    logger("RCServer", f"Loading config: {config_path}")
+    with open(config_path) as f:
+        config = json.load(f)
+
+    # Capture device (dev or file)
+    device: str = config["videoCapture"]["device"]
+    logger("RCServer", f"Config :: Device: {device}")
+
     # YOLO path
-    yolo_path: str = sys.argv[1]
+    yolo_path: str = config["yolo"]["chkpt"]
+    logger("RCServer", f"Config :: Yolo path: {yolo_path}")
     
     # Yunet path
-    yunet_path: str = sys.argv[2]
+    yunet_path: str = config["yunet"]["chkpt"]
+    logger("RCServer", f"Config :: Yunet path: {yunet_path}")
 
     # API
-    port: int = int(sys.argv[3])
+    port: int = config["websocket"]["port"]
+    logger("RCServer", f"Config :: Websocket port: {port}")
     
     # Create and start threads
     threads: list[Thread, Thread] = [
-        Thread(target=worker_detect, args=(yolo_path, yunet_path,RCStopEvent)),
-        Thread(target=worker_socket, args=(port,RCStopEvent))
+        Thread(target=worker_detect, args=(device, yolo_path, yunet_path, RCStopEvent)),
+        Thread(target=worker_socket, args=(port, RCStopEvent))
     ]
 
     for t in threads:
@@ -83,11 +96,11 @@ if __name__=="__main__":
             threads[0].join(1)
             threads[1].join(1)
         except KeyboardInterrupt as e:
-            logger("RoboCaptureServer", "Shutting down..")
+            logger("RCServer", "Shutting down..")
             RCStopEvent.set()
             break
 
     RCStopEvent.set()
     threads[0].join()
     threads[1].join()
-    logger("RoboCaptureServer", "Goodbye!")
+    logger("RCServer", "Goodbye!")
