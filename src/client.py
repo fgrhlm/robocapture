@@ -8,7 +8,11 @@ from flask import Flask, Response, render_template, stream_with_context
 from flask_cors import CORS
 
 if __name__=="__main__":
-    app = Flask(__name__, template_folder="templates")
+    app = Flask(
+        __name__,
+        template_folder="templates",
+        static_folder="templates/static"
+    )
     CORS(app)
     
     @app.route("/")

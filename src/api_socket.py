@@ -15,7 +15,7 @@ class APISocket:
     def __init__(self, port: int = 8001):
         self.port = port 
 
-    def preprocess_payload(self, results: list[RCYoloResults, RCYunetResults], frame: str) -> str:
+    def preprocess_payload(self, results, frame) -> str:
         """Serializes, cleans up, and encodes the payload."""
 
         # Serialize payload dict to json string
@@ -30,7 +30,8 @@ class APISocket:
                 "conf": n.confidence,
                 "box": [n.box.x1, n.box.y1, n.box.x2, n.box.y2]
             } for n in results[1].processed],
-            "frame": frame
+            "frame": frame,
+            "meta": results[2]
         } 
 
         payload: str = json.dumps(payload)

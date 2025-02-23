@@ -3,7 +3,10 @@ import signal
 import json
 import cv2 as cv
 import numpy as np
+import platform
+import GPUtil
 
+from cpuinfo import get_cpu_info
 from base64 import b64encode
 from queue import Queue, Full
 from threading import Event, Thread
@@ -26,17 +29,44 @@ RCFramesQueue: Queue = Queue(maxsize=5)
 # Signaling
 RCStopEvent: Event = Event()
 
-def worker_detect(device,yolo_path,yunet_path,stop_event):
+def worker_detect(config,device,yolo_path,yunet_path,stop_event):
     cap: RCVideoCapture = RCVideoCapture(device)
-    yolo: RCYolo = RCYolo(yolo_path)
-    yunet: RCYunet = RCYunet(yunet_path, (cap.frame_width, cap.frame_height))
+    yolo: RCYolo = RCYolo(yolo_path,config)
+    yunet: RCYunet = RCYunet(yunet_path, config)
+
+    sys_os = platform.freedesktop_os_release()
+    sys_cpu = get_cpu_info()
+    sys_gpus = GPUtil.getGPUs()
 
     def process(frame):
         b64_frame: str = b64encode(cv.imencode(".jpg", frame)[1]).decode()
         yolo_results: RCYoloResults = yolo.detect(frame)
         yunet_results: RCYunetResults = yunet.detect(frame)
+        
+        meta = {
+            "system": {
+                "sys": f'{sys_cpu["arch"]} {sys_os["PRETTY_NAME"]}',
+                "cpu": sys_cpu["brand_raw"],
+                "gpu": [n.name for n in sys_gpus],
+                "gpuDriver": [n.driver for n in sys_gpus],
+                "python": sys_cpu["python_version"],
+                "opencv": cv.__version__,
+                "fps": cap.fps,
+                "captureDevice": device
+            },
+            "yolo": {
+                "inputSize": yolo.config["img_size"],
+                "chkpt": yolo.config["chkpt"].split("/")[-1]
+            },
+            "yunet": {
+                "inputSize": yunet.config["img_size"],
+                "chkpt": yunet.config["chkpt"].split("/")[-1]
+            },
+            "yoloInputSize": yolo.config["img_size"],
+            "yunetInputSize": yunet.config["img_size"],
+        }
 
-        results: list[RCYoloResults, RCYunetResults] = [yolo_results, yunet_results]
+        results = [yolo_results, yunet_results, meta]
         
         try:
             RCResultsQueue.put(results)
@@ -50,7 +80,7 @@ def worker_detect(device,yolo_path,yunet_path,stop_event):
 
     cap.process(process, stop_event=stop_event)
 
-def worker_socket(port,stop_event):
+def worker_socket(config,port,stop_event):
     # API socket connection
     api = APISocket(port=port)
     api.start_socket(results_queue=RCResultsQueue, frames_queue=RCFramesQueue, stop_event=stop_event)
@@ -84,8 +114,8 @@ if __name__=="__main__":
     
     # Create and start threads
     threads: list[Thread, Thread] = [
-        Thread(target=worker_detect, args=(device, yolo_path, yunet_path, RCStopEvent)),
-        Thread(target=worker_socket, args=(port, RCStopEvent))
+        Thread(target=worker_detect, args=(config, device, yolo_path, yunet_path, RCStopEvent)),
+        Thread(target=worker_socket, args=(config, port, RCStopEvent))
     ]
 
     for t in threads:

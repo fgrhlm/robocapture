@@ -2,6 +2,7 @@ import sys
 import cv2 as cv
 import numpy as np
 import queue
+import json
 
 from capture import RCVideoCapture
 from ultralytics import YOLO
@@ -13,18 +14,33 @@ from utils.logger import logger, LogLevel
 # https://docs.ultralytics.com/modes/predict/
 # https://www.geeksforgeeks.org/object-detection-with-yolo-and-opencv/
 # https://github.com/ultralytics/ultralytics/blob/main/docs/en/usage/simple-utilities.md
+# https://docs.ultralytics.com/modes/predict/#inference-arguments
 
 class RCYolo:
     """Thin wrapper around ultralytics YOLO model."""
-    def __init__(self, yolo_path):
+    def __init__(self, yolo_path, config):
         self.path: str = yolo_path
         """Path to the yolo model"""
-        self.model: YOLO = YOLO(yolo_path)
+        self.config = config["yolo"]
         """YOLO model object"""
+        self.model: YOLO = YOLO(yolo_path, task="detect", verbose=self.config["verbose"])
+        
+        if self.config["cpu"]:
+            self.model = self.model.to("cpu")
 
     def detect(self, frame) -> RCYoloResults:
         """Runs inference on **`frame`** and returns the results"""
-        results: Results = self.model(frame, verbose = False)
+        results: Results = self.model(
+            frame,
+            verbose=self.config["verbose"],
+            stream=self.config["stream"],
+            conf=self.config["min_conf"],
+            imgsz=[int(n/2) for n in self.config["img_size"]],
+            half=self.config["fp16"],
+            max_det=self.config["max_detect"],
+            vid_stride=self.config["vid_stride"]
+        )
+
         results: RCYoloResults = RCYoloResults(results, self.model.names)
 
         return results

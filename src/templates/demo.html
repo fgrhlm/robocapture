@@ -1,51 +1,154 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>RoboCapture Demo Client</title>
+    <title>RoboCapture Debug</title>
   </head>
   <body>
-    <h1>RoboCapture Demo Client</h1>
+    <h1>RoboCapture Debug</h1>
+    <p id="status" class="light-red-2">down</p>
     <hr>
     <div id="results">
-      <div id="frame-container">
-        <canvas id="frame-canvas" width="640" height="480">
+      <div id="split-results">
+        <div id="frame-container">
+          <canvas id="frame-canvas" width="640" height="360">
+        </div>
+        <div>
+          <ul id="meta"></ul>
+        </div>
       </div>
       <hr>
       <div id="detection">
         <div id="yolo">
-          <h4>Yolo</h4>
-          <pre id="yolo-data"></pre>
+          <h4 class="light-blue-1" id="yolo-title"></h4>
+          <ul id="yolo-data"></ul>
         </div>
         <div id="yunet">
-          <h4>Yunet</h4>
-          <pre id="yunet-data"></pre>
+          <h4 class="light-red-1" id="yunet-title"></h4>
+          <ul id="yunet-data"></ul>
         </div>
       </div>
     </div>
+
     <script type="text/javascript">
+      // Elements
       const elemYolo = document.getElementById("yolo-data");
       const elemYunet = document.getElementById("yunet-data");
+      const elemYoloTitle = document.getElementById("yolo-title");
+      const elemYunetTitle = document.getElementById("yunet-title");
+      const elemStatus = document.getElementById("status");
       const elemFrame = document.getElementById("frame");
+      const elemMeta = document.getElementById("meta");
       const canvas = document.getElementById("frame-canvas")
       const ctx = canvas.getContext("2d");
 
-      const socket = new WebSocket("ws://localhost:8080");
+      // Socket
+      const host = "localhost"
+      const port = 9001
+      const socket = new WebSocket(`ws://${host}:${port}`);
+      
+      // Utils
+      const addToList = (ul_elem, text) => {
+          let entry = document.createElement("li");
+          let entryText = document.createTextNode(text);
+          entry.appendChild(entryText);
+          ul_elem.appendChild(entry);
+      }
+
+      const connect = () => {
+
+        console.log(sock)
+        return sock
+      }
+
+      const palette = {
+        "blue": "#4444FFFF",
+        "red": "#FF4444FF",
+        "blue-t": "#4444FF25",
+        "red-t": "#FF444425",
+      }
+
+      const drawRect = (ctx,x,y,w,h,stroke,color) => {
+        ctx.strokeStyle = palette[color];
+        ctx.lineWidth = `${stroke}px`;
+
+        ctx.beginPath();
+        ctx.rect(x,y,w,h);
+        ctx.stroke();
+      }
+
+      const drawCircle = (ctx,x,y,r,stroke,color) => {
+        ctx.strokeStyle = palette[color];
+        ctx.lineWidth = `${stroke}px`;
+        ctx.beginPath();
+        ctx.arc(x,y,r,0,2*Math.PI);
+        ctx.stroke();
+      }
 
       socket.addEventListener("open", e => {
         console.log("Connection opened!");
+        elemStatus.textContent = "up";
+        elemStatus.className = "light-green";
       });
+
+      socket.addEventListener("close", e => {
+        console.log("Connection closed!");
+        elemStatus.textContent = "down";
+        elemStatus.className = "light-red-2";
+      })
 
       socket.addEventListener("message", e => {
         res = JSON.parse(e.data);
-        elemYolo.textContent = JSON.stringify(res.yolo, undefined, 2);
-        elemYunet.textContent = JSON.stringify(res.yunet, undefined, 2);
+       
+        // Set result titles
+        elemYoloTitle.textContent = `(YOLO) ${res.meta.yolo.chkpt}: (${res.meta.yolo.inputSize})`;
+        elemYunetTitle.textContent = `(Yunet) ${res.meta.yunet.chkpt}: (${res.meta.yunet.inputSize})`;
 
+        // Populate YOLO Results
+        elemYolo.textContent = "";
+        res["yolo"].forEach(n => { addToList(elemYolo, `${n["name"]}: ${n["conf"]}`); });
+
+        // Populate Yunet Results
+        elemYunet.textContent = "";
+        res["yunet"].forEach(n => { addToList(elemYunet, `${n["name"]}: ${n["conf"]}`); });
+        
+        // Populate metadata
+        elemMeta.textContent = "";
+        for(let key in res.meta.system) { addToList(elemMeta, `${key}: ${res.meta.system[key]}`); }
+
+        // Draw frame
         let frameImg = new Image()
         frameImg.src = `data:image/jpeg;charset=utf-8;base64, ${res.frame}`
         frameImg.addEventListener("load", e => {
-          ctx.drawImage(frameImg, 0, 0, frameImg.width, frameImg.height, 0, 0, canvas.width, canvas.height);
+          ctx.drawImage(frameImg, 0, 0);
+         
+          // Draw yolo boxes
+          res.yolo.forEach(n => {
+            const box = n.box;
+
+            let x = box[0];
+            let y = box[1];
+            let w = (box[2] - box[0]);
+            let h = (box[3] - box[1]);
+            drawRect(ctx,x,y,w,h,2,"blue");
+
+            ctx.font = "12px monospace";
+            ctx.fillStyle = "#FF00FF";
+            ctx.fillText(n.name, x, y);
+          })
+
+          // Draw yunet boxes
+          res.yunet.forEach(n => {
+            const box = n.box;
+
+            let x = (box[0] * 2);
+            let y = (box[1] * 2);
+            let w = (box[2] * 2) - (box[0] * 2);
+            let h = (box[3] * 2) - (box[1]* 2);
+            drawCircle(ctx,x + (w/2),y + (h/2),((w+h) / Math.PI),2,"red");
+          })
         })
       })
+
     </script>
     <style>
       html, body {
@@ -63,13 +166,33 @@
         background-color: black;
         color: white;
       }
+      
+      #yolo-data li:nth-child(odd){ background-color: #4444FF22; }
+      #yolo-data li:hover {
+        background-color: #4444FFAA;
+      }
+
+      #yunet-data li:nth-child(odd){ background-color: #FF444422; }
+      #yunet-data li:hover {
+        background-color: #FF4444AA;
+      }
+
+      ul, li {
+        font-family: monospace;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+     
+      h4 {
+        padding: 4px;
+      }
 
       #frame-canvas {
         border: 3px;
         border-color: black;
         border-style: solid;
-        min-height: 480px;
-        min-width: 640px;
       }
 
       #results {
@@ -93,9 +216,34 @@
       }
 
       #yolo, #yunet { width: 50%; margin: 10px; }
+      
+      #meta {
+        width: 500px;
+      }
 
-      .green { background-color: #44FF44; }
+      #split-results {
+        display: flex;
+      }
+
+      #split-results * {
+        margin: 4px;
+      }
+
+      #status {
+        margin: 0;
+        text-align: center;
+        font-family: monospace;
+        font-weight: bold;
+        max-width: 40px;
+      }
+
       .red { background-color: #FF4444; }
+      .blue { background-color: #4444FF; }
+      .light-red-1 {background-color: #FF444422}
+      .light-red-2 {background-color: #FF4444AA}
+      .light-blue-1 {background-color: #4444FF22}
+      .light-blue-2 {background-color: #4444FFAA}
+      .light-green { background-color: #44FF44AA; }
     </style>
   </body>
 </html>

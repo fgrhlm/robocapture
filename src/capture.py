@@ -23,6 +23,7 @@ class RCVideoCapture:
         https://docs.opencv.org/4.x/d8/dfe/classcv_1_1VideoCapture.html
 
         """
+        self.fps = 0
 
     def open(self, path: str) -> cv.VideoCapture:
         """
@@ -55,7 +56,8 @@ class RCVideoCapture:
             ret, frame = self.cap.read()
 
             if not ret:
-                break
+                self.cap.set(cv.CAP_PROP_POS_FRAMES, 0)
+                continue
             
             f(frame)
 
