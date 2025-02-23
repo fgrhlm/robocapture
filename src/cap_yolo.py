@@ -30,12 +30,12 @@ class RCYolo:
 
     def detect(self, frame) -> RCYoloResults:
         """Runs inference on **`frame`** and returns the results"""
+        frame_resize = cv.resize(frame, (640, 640))
         results: Results = self.model(
-            frame,
+            frame_resize,
             verbose=self.config["verbose"],
             stream=self.config["stream"],
             conf=self.config["min_conf"],
-            imgsz=[int(n/2) for n in self.config["img_size"]],
             half=self.config["fp16"],
             max_det=self.config["max_detect"],
             vid_stride=self.config["vid_stride"]
