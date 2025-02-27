@@ -1,10 +1,71 @@
 import cv2 as cv
 import sys
+import pyaudio
 
 from collections.abc import Callable
 from threading import Event
 
 from utils.logger import logger, LogLevel
+
+class RCAudioCapture:
+    def __init__(
+        self,
+        format = pyaudio.paInt16,
+        channels: int = 1,
+        sample_rate: int = 48000,
+        frames_per_buffer: int = 1024,
+        input_device: int = 57,
+        rec_len: int = 3
+    ):
+        self.format = format
+        self.channels = channels
+        self.sample_rate = sample_rate
+        self.frames_per_buffer = frames_per_buffer
+        self.input_device = input_device
+        self.rec_len = rec_len
+        self.target_len = ((sample_rate / frames_per_buffer) * self.rec_len)
+        self.input = pyaudio.PyAudio()
+        self.cap = self.open()
+
+    def open(self):
+        try:
+            cap = self.input.open(
+                format = self.format,
+                channels = self.channels,
+                rate = self.sample_rate,
+                input = True,
+                frames_per_buffer = self.frames_per_buffer,
+            )
+
+            logger("RCAudioCapture", "Capture opened!")
+
+            return cap
+        except:
+            logger("RCAudioCapture", "Cant open audio capture!", level=LogLevel.FATAL)
+            sys.exit(1)
+
+    def close(self):
+        self.cap.stop_stream()
+        self.cap.close()
+        self.input.terminate()
+
+        logger("RCAudioCapture", "Capture closed!")
+
+    def process(self, f: Callable, stop_event: Event = None):
+        logger("RCAudioCapture", "Processing..")
+
+        while not stop_event.is_set():
+            data = []
+            
+            while len(data) < self.target_len:
+                sample = self.cap.read(self.frames_per_buffer)
+                data.append(sample)
+
+            # Process data
+            f(data)
+
+        self.close()
+
 
 class RCVideoCapture:
     """Thin wrapper around OpenCV's VideoCapture, with some additional functionality."""
@@ -48,6 +109,8 @@ class RCVideoCapture:
         self.cap.release()
 
     def process(self, f: Callable, stop_event: Event=None):
+        logger("RCVideoCapture", "Processing..")
+
         """Executes function **`f(frame)`** every new frame"""
         tm = cv.TickMeter()
 

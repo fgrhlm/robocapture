@@ -15,7 +15,7 @@ class APISocket:
     def __init__(self, port: int = 8001):
         self.port = port 
 
-    def preprocess_payload(self, results, frame) -> str:
+    def preprocess_payload(self, audio, video, frame) -> str:
         """Serializes, cleans up, and encodes the payload."""
 
         # Serialize payload dict to json string
@@ -24,14 +24,14 @@ class APISocket:
                 "name": n.class_name,
                 "conf": n.confidence,
                 "box": [n.box.x1, n.box.y1, n.box.x2, n.box.y2]
-            } for n in results[0].processed],
+            } for n in video[0].processed],
             "yunet": [{
                 "name": n.class_name,
                 "conf": n.confidence,
                 "box": [n.box.x1, n.box.y1, n.box.x2, n.box.y2]
-            } for n in results[1].processed],
+            } for n in video[1].processed],
             "frame": frame,
-            "meta": results[2]
+            "meta": video[2]
         } 
 
         payload: str = json.dumps(payload)
@@ -43,7 +43,13 @@ class APISocket:
         
         return payload
 
-    def start_socket(self,results_queue: Queue=None,frames_queue: Queue=None,stop_event: Event=None):
+    def start_socket(
+            self,
+            audio_results_queue: Queue=None,
+            video_results_queue: Queue=None,
+            frames_queue: Queue=None,
+            stop_event: Event=None
+    ):
         """Accept connections, processes detection results and sends payload to client."""
         logger("APISocket", f"Listening on {self.port}..")
 
@@ -54,10 +60,11 @@ class APISocket:
                 # Pop detection results from the queue and send them to client.
                 while not stop_event.is_set():
                     try:
-                        next_results: dict = results_queue.get()
+                        next_audio: dict = video_results_queue.get()
+                        next_video: dict = audio_results_queue.get()
                         next_frame: str = frames_queue.get()
                         
-                        payload: str = self.preprocess_payload(next_results, next_frame)
+                        payload: str = self.preprocess_payload(next_audio, next_video, next_frame)
                         
                         try:
                             ws.send(payload)
