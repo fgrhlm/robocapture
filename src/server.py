@@ -14,9 +14,10 @@ from time import sleep
 from capture import RCVideoCapture, RCAudioCapture
 from cap_yolo import RCYolo
 from cap_yunet import RCYunet
+from cap_whisper import RCWhisper
 from api_socket import APISocket
 from utils.logger import logger 
-from result import RCYoloResults, RCYunetResults
+from result import RCYoloResults, RCYunetResults, RCWhisperResults
 
 # https://docs.python.org/3/library/threading.html
 # https://www.geeksforgeeks.org/multithreading-python-set-1/
@@ -31,11 +32,14 @@ RCFramesQueue: Queue = Queue(maxsize=5)
 RCStopEvent: Event = Event()
 
 def worker_audio(config,stop_event):
-    cap: RCAudioCapture = RCAudioCapture()
+    cap: RCAudioCapture = RCAudioCapture(config)
+    whisper = RCWhisper(config)
 
     def process(clip):
+        results = whisper.detect(clip)
+
         try:
-            RCAudioResultsQueue.put([])
+            RCAudioResultsQueue.put(results)
         except Full:
             logger("RCServer", "Audio Results Queue is full!", level=LogLevel.WARNING)
 
@@ -128,7 +132,7 @@ if __name__=="__main__":
     # Create and start threads
     threads: list[Thread, Thread] = [
         Thread(target=worker_video, args=(config, device, yolo_path, yunet_path, RCStopEvent)),
-        Thread(target=worker_audio, args=(config, RCStopEvent)),
+        #Thread(target=worker_audio, args=(config, RCStopEvent)),
         Thread(target=worker_socket, args=(config, port, RCStopEvent))
     ]
 

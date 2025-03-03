@@ -66,3 +66,11 @@ class RCYunetResults:
             return r
 
         return r
+
+class RCWhisperResults:
+    def __init__(self, raw):
+        self.raw = raw
+        self.processed = self._process(raw)
+
+    def _process(self, raw):
+        return raw

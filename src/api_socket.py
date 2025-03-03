@@ -30,6 +30,7 @@ class APISocket:
                 "conf": n.confidence,
                 "box": [n.box.x1, n.box.y1, n.box.x2, n.box.y2]
             } for n in video[1].processed],
+            "whisper": audio,
             "frame": frame,
             "meta": video[2]
         } 
@@ -55,7 +56,7 @@ class APISocket:
 
         def handler(ws):
             while not stop_event.is_set():
-                if not results_queue:
+                if not video_results_queue:
                     continue
                 # Pop detection results from the queue and send them to client.
                 while not stop_event.is_set():
