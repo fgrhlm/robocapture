@@ -27,23 +27,24 @@ from result import RCYoloResults, RCYunetResults, RCWhisperResults
 RCVideoResultsQueue: Queue = Queue(maxsize=5)
 RCAudioResultsQueue: Queue = Queue(maxsize=5)
 RCFramesQueue: Queue = Queue(maxsize=5)
+RCAudioClipsQueue: Queue = Queue()
 
 # Signaling
 RCStopEvent: Event = Event()
 
 def worker_audio(config,stop_event):
-    cap: RCAudioCapture = RCAudioCapture(config)
+    cap: RCAudioCapture = RCAudioCapture(config, rec_threshold=1.0)
+    cap.process(RCAudioClipsQueue, stop_event=stop_event)
+
+def worker_audio_post(stop_event,file_queue):
     whisper = RCWhisper(config)
-
-    def process(clip):
-        results = whisper.detect(clip)
-
+    while not stop_event.is_set():
         try:
+            file = file_queue.get()
+            results = whisper.detect(file)
             RCAudioResultsQueue.put(results)
-        except Full:
-            logger("RCServer", "Audio Results Queue is full!", level=LogLevel.WARNING)
-
-    cap.process(process, stop_event=stop_event)
+        except Exception as e:
+            print(e)
 
 def worker_video(config,device,yolo_path,yunet_path,stop_event):
     cap: RCVideoCapture = RCVideoCapture(device)
@@ -132,7 +133,8 @@ if __name__=="__main__":
     # Create and start threads
     threads: list[Thread, Thread] = [
         Thread(target=worker_video, args=(config, device, yolo_path, yunet_path, RCStopEvent)),
-        #Thread(target=worker_audio, args=(config, RCStopEvent)),
+        Thread(target=worker_audio, args=(config, RCStopEvent)),
+        Thread(target=worker_audio_post, args=(RCStopEvent, RCAudioClipsQueue)),
         Thread(target=worker_socket, args=(config, port, RCStopEvent))
     ]
 

@@ -7,17 +7,18 @@ from result import RCWhisperResults
 
 class RCWhisper:
     def __init__(self, config: dict):
-        self.model = whisper.load_model("tiny")
+        self.model = whisper.load_model("tiny.en")
 
     def detect(self, clip):
-        logger("RCWhisper", "Detecting..")
-       
-        clip = whisper.pad_or_trim(clip)
+        #clip = whisper.load_audio(clip)
+        #clip = whisper.pad_or_trim(clip)
 
-        mel = whisper.log_mel_spectrogram(clip, n_mels=self.model.dims.n_mels).to(self.model.device)
-        options = whisper.DecodingOptions()
-        result = whisper.decode(self.model, mel, options)
-        print(result.text)
+        logger("RCWhisper", "Detecting..")
+        #mel = whisper.log_mel_spectrogram(clip, n_mels=self.model.dims.n_mels).to(self.model.device)
+        #options = whisper.DecodingOptions()
+        #result = whisper.decode(self.model, mel, options)
+        result = self.model.transcribe(clip)
+        print(result)
 
         results: RCWhisperResults = RCWhisperResults(result)
         return results
