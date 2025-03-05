@@ -38,7 +38,8 @@ class RCServer:
             self.threads.append(
                 RCAudioThread(
                     self.config_audio,
-                    self.stop_event
+                    self.stop_event,
+                    self.share.get("audio")
                 )
             )
 
@@ -46,7 +47,8 @@ class RCServer:
             self.threads.append(
                 RCVideoThread(
                     self.config_video,
-                    self.stop_event
+                    self.stop_event,
+                    self.share.get("video")
                 )
             )
 
@@ -54,12 +56,23 @@ class RCServer:
         logging.info("Starting worker threads..")
         for thread in self.threads:
             thread.start()
-
+    
+    def join_workers(self):
+        while True in [n.is_alive() for n in self.threads]:
+            for t in self.threads:
+                t.join(1)
+            
     def run(self):
-        start_workers()
+        logging.info("Starting server..")
+        self.start_workers()
 
         while True:
-            if self.stop_event.is_set():
+            pass
 
 if __name__=="__main__":
-    server = RCServer("conf/default.json")
+    try:
+        server = RCServer("conf/default.json")
+        server.run()
+    except KeyboardInterrupt:
+        server.stop_event.set()
+        server.join_workers()
