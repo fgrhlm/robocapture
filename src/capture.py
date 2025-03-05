@@ -59,7 +59,7 @@ class RCAudioCapture:
 
         logger("RCAudioCapture", "Processing..")
         while not stop_event.is_set():
-            clip_fn = os.path.join(tmp_dir, f"{clips_queue.qsize()}.wav")
+            clip_fn = os.path.join(tmp_dir, f"{}.wav")
             with sf.SoundFile(
                 clip_fn,
                 "w",
@@ -69,6 +69,7 @@ class RCAudioCapture:
             ) as file:
                 while True:
                     data = self.buffer.get()
+
                     if not data.any():
                         continue
 
