@@ -54,12 +54,6 @@
           ul_elem.appendChild(entry);
       }
 
-      const connect = () => {
-
-        console.log(sock)
-        return sock
-      }
-
       const palette = {
         "blue": "#4444FFFF",
         "red": "#FF4444FF",
@@ -98,7 +92,7 @@
 
       socket.addEventListener("message", e => {
         res = JSON.parse(e.data);
-       
+        console.log(res) 
         // Set result titles
         elemYoloTitle.textContent = `(YOLO) ${res.meta.yolo.chkpt}: (${res.meta.yolo.inputSize})`;
         elemYunetTitle.textContent = `(Yunet) ${res.meta.yunet.chkpt}: (${res.meta.yunet.inputSize})`;

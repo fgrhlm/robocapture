@@ -1,0 +1,46 @@
+{
+    "log": {
+        "logLevel": "NOTSET"
+    },
+    "api": {
+        "port": 9001
+    },
+    "audio": {
+        "enabled": true,
+        "device": 0,
+        "mode": "voice_activity",
+        "pipeline": [
+            "audio/whisper.py"
+        ]
+    },
+    "video": {
+        "enabled": true,
+        "device": 0,
+        "mode": "normal",
+        "pipeline": [
+            "audio/yolo.py",
+            "audio/yunet.py"
+        ]
+    },
+    "ext": {
+        "yolo": {
+            "checkpoint": "models/yolov11n.pt",
+            "cpu": false,
+            "min_conf": 0.5,
+            "img_size": [384, 640],
+            "stream": true,
+            "verbose": false,
+            "fp16": true,
+            "max_detect": 30,
+            "vid_stride": 1
+        },
+        "yunet": {
+            "checkpoint": "models/face_detection_yunet_2023mar_int8bq.onnx",
+            "cpu": false,
+            "img_size": [640, 360],
+            "min_detect": 0.7,
+            "max_nms": 0.3,
+            "top_k": 5000
+        }
+    }
+}

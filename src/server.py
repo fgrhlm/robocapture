@@ -6,6 +6,7 @@ import numpy as np
 import platform
 import GPUtil
 
+from numpy import fft
 from cpuinfo import get_cpu_info
 from base64 import b64encode
 from queue import Queue, Full
@@ -22,11 +23,14 @@ from result import RCYoloResults, RCYunetResults, RCWhisperResults
 # https://docs.python.org/3/library/threading.html
 # https://www.geeksforgeeks.org/multithreading-python-set-1/
 # https://docs.python.org/3/library/queue.html#queue.SimpleQueue
+# https://numpy.org/doc/stable/reference/generated/numpy.fft.fft.html
+# https://stackoverflow.com/questions/4315989/python-frequency-analysis-of-sound-files
 
 # Data sharing between threads
-RCVideoResultsQueue: Queue = Queue(maxsize=5)
-RCAudioResultsQueue: Queue = Queue(maxsize=5)
-RCFramesQueue: Queue = Queue(maxsize=5)
+RCVideoResultsQueue: Queue = Queue()
+RCAudioResultsQueue: Queue = Queue()
+RCAudioDataQueue: Queue = Queue()
+RCVideoDataQueue: Queue = Queue()
 RCAudioClipsQueue: Queue = Queue()
 
 # Signaling
@@ -34,7 +38,24 @@ RCStopEvent: Event = Event()
 
 def worker_audio(config,stop_event):
     cap: RCAudioCapture = RCAudioCapture(config, rec_threshold=1.0)
-    cap.process(RCAudioClipsQueue, stop_event=stop_event)
+
+    def meta(data):
+        level = np.linalg.norm(data)
+        transform = fft.fft(data)
+        bandwidth = fft.fftfreq(len(transform))
+
+        payload = {
+            "bytes": data,
+            "level": level,
+            "spectrum": {
+                "fft": transform,
+                "bandwidth": bandwidth
+            }
+        }
+
+        RCAudioDataQueue.put(payload)
+
+    cap.process(RCAudioClipsQueue, stop_event=stop_event, f=meta)
 
 def worker_audio_post(stop_event,file_queue):
     whisper = RCWhisper(config)
@@ -91,7 +112,7 @@ def worker_video(config,device,yolo_path,yunet_path,stop_event):
             logger("RCServer", "Video Results Queue is full!", level=LogLevel.WARNING)
 
         try:
-            RCFramesQueue.put(b64_frame)
+            RCVideoDataQueue.put(b64_frame)
         except Full:
             logger("RCServer", "Frames Queue is full!", level=LogLevel.WARNING)
 
@@ -103,7 +124,8 @@ def worker_socket(config,port,stop_event):
     api.start_socket(
         audio_results_queue=RCAudioResultsQueue,
         video_results_queue=RCVideoResultsQueue,
-        frames_queue=RCFramesQueue,
+        audio_data_queue=RCAudioDataQueue,
+        video_data_queue=RCVideoDataQueue,
         stop_event=stop_event
     )
 

@@ -1,0 +1,34 @@
+digraph {
+  label="RCAudio";
+  labelloc=t;
+  fontname="monospace";
+  pad=0.25;
+  rankdir=LR;
+  
+  node [
+    fontname="monospace";
+    shape=record;
+    width=2.0;
+    height=0.4;
+  ];
+
+  subgraph cluster_input {
+    label = "RCInput"
+    input [ label = "RCAudioDevice|RCAudioNetworkDevice|RCAudioFile" ];
+  }
+
+  subgraph cluster_pipeline {
+    label = "RCAudioPipeline"
+    preprocessing [ label = "Preprocessing" ];
+    callback [ label = "User Callback" ];
+    write [ label = "Write to file"]
+  }
+
+  subgraph cluster_preprocessing {
+    label = "Preprocessing"
+     ["Detect audio activity"]
+    detection ["Detect audio activity"]
+  }
+
+  input -> preprocessing -> callback -> write;
+}
