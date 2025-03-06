@@ -12,6 +12,7 @@ from threading import Event, Thread
 from config import RCConfig
 from audio import RCAudioThread
 from video import RCVideoThread
+from sock import RCWebSocket
 
 # https://docs.python.org/3/library/threading.html
 # https://www.geeksforgeeks.org/multithreading-python-set-1/
@@ -23,6 +24,7 @@ class RCServer:
 
         self.config_audio = self.config.get("audio")
         self.config_video = self.config.get("video")
+        self.config_socket = self.config.get("socket")
         self.config_api = self.config.get("api")
        
         # Shared variables (threading)
@@ -70,13 +72,16 @@ class RCServer:
     def run(self):
         logging.info("Starting server..")
         self.start_workers()
+        
+        sock = RCWebSocket(
+            self.config_socket,
+            self.stop_event,
+            self.share["audio"],
+            self.share["video"]
+        )
 
-        while True:
-            if self.stop_event.is_set():
-                break
-
-            sleep(1)
-
+        sock.start()
+        
 if __name__=="__main__":
     try:
         config_path = sys.argv[1]

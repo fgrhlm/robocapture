@@ -2,11 +2,11 @@
     "log": {
         "logLevel": "NOTSET"
     },
-    "api": {
+    "socket": {
         "port": 9001
     },
     "audio": {
-        "enabled": false,
+        "enabled": true,
         "device": 0,
         "sample_rate": 44100,
         "channels": 1,

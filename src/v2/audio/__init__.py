@@ -39,10 +39,7 @@ class RCAudio(RCWorker):
         self.state = RCAudioState.STOPPED
         self.level = 0
         self.activity = False
-
         self.buffer_queue = Queue()
-        self.out_queue = data_queue
-
         self.device = config["device"] or None
         self.sample_rate = config["sample_rate"] or None
         self.channels = config["channels"] or 1
@@ -155,7 +152,7 @@ class RCAudio(RCWorker):
             logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
             results = self.pipeline.exec("on_save", clip_name)
             os.remove(clip_name)
-            self.out_queue.put(results)
+            self.queue.put(results)
             
             self.set_state(RCAudioState.LISTENING)
 

@@ -43,7 +43,8 @@ class RCVideo(RCWorker):
                 continue
             # DEBUG DEBUG DEBUG
 
-            self.pipeline.exec("on_data", frame)
+            results = self.pipeline.exec("on_data", frame)
+            self.queue.put(results)
 
             self.timer.stop()
             self.fps = self.timer.getFPS()
