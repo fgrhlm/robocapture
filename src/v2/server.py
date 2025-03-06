@@ -1,8 +1,10 @@
 import sys
+import os
 import json
 import numpy as np
 import logging
 
+from time import sleep
 from importlib import import_module
 from queue import Queue
 from threading import Event, Thread
@@ -56,6 +58,9 @@ class RCServer:
         logging.info("Starting worker threads..")
         for thread in self.threads:
             thread.start()
+
+            while not thread.is_ready():
+                sleep(0.5)
     
     def join_workers(self):
         while True in [n.is_alive() for n in self.threads]:
@@ -67,11 +72,12 @@ class RCServer:
         self.start_workers()
 
         while True:
-            pass
+            sleep(1)
 
 if __name__=="__main__":
     try:
-        server = RCServer("conf/default.json")
+        config_path = sys.argv[1]
+        server = RCServer(config_path)
         server.run()
     except KeyboardInterrupt:
         server.stop_event.set()

@@ -8,12 +8,15 @@
     "audio": {
         "enabled": true,
         "device": 0,
-        "sample_rate": 16000,
+        "sample_rate": 44100,
         "channels": 1,
         "blksize": 128,
         "mode": "voice_activity",
         "pipeline": {
             "on_save": ["audio.whisper"]
+        },
+        "ext": {
+            "whisper": {"checkpoint": "tiny.en"}
         }
     },
     "video": {
@@ -25,27 +28,27 @@
                 "video.yolo",
                 "video.yunet"
             ]
-        }
-    },
-    "ext": {
-        "yolo": {
-            "checkpoint": "models/yolov11n.pt",
-            "cpu": false,
-            "min_conf": 0.5,
-            "img_size": [384, 640],
-            "stream": true,
-            "verbose": false,
-            "fp16": true,
-            "max_detect": 30,
-            "vid_stride": 1
         },
-        "yunet": {
-            "checkpoint": "models/face_detection_yunet_2023mar_int8bq.onnx",
-            "cpu": false,
-            "img_size": [640, 360],
-            "min_detect": 0.7,
-            "max_nms": 0.3,
-            "top_k": 5000
+        "ext": {
+            "yolo": {
+                "checkpoint": "models/yolov11n.pt",
+                "cpu": false,
+                "min_conf": 0.5,
+                "img_size": [384, 640],
+                "stream": true,
+                "verbose": false,
+                "fp16": true,
+                "max_detect": 30,
+                "vid_stride": 1
+            },
+            "yunet": {
+                "checkpoint": "models/face_detection_yunet_2023mar_int8bq.onnx",
+                "cpu": false,
+                "img_size": [640, 360],
+                "min_detect": 0.7,
+                "max_nms": 0.3,
+                "top_k": 5000
+            }
         }
     }
 }

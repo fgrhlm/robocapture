@@ -5,12 +5,12 @@ import numpy as np
 
 from uuid import uuid1
 from enum import Enum
-from threading import Thread
 from pipeline import RCPipeline
 from sounddevice import InputStream
 from soundfile import SoundFile
 from queue import Queue
 from tempfile import mkdtemp
+from threads import RCThread
 
 # https://numpy.org/doc/stable/reference/generated/numpy.fft.fft.html
 # https://stackoverflow.com/questions/4315989/python-frequency-analysis-of-sound-files
@@ -40,13 +40,13 @@ class RCAudio:
         self.buffer_queue = Queue()
         self.out_queue = out_queue
 
-        self.device = config["device"] or 0
-        self.sample_rate = config["sample_rate"] or 44100
+        self.device = config["device"] or None
+        self.sample_rate = config["sample_rate"] or None
         self.channels = config["channels"] or 1
         self.blksize = config["blksize"] or 128
-        self.rec_threshold = 1.0
+        self.rec_threshold = 0.6
         
-        self.pipeline = RCPipeline(self.config.get("pipeline"))
+        self.pipeline = RCPipeline(self.config)
 
         try:
             self.stream = InputStream(
@@ -117,23 +117,22 @@ class RCAudio:
                     if file.tell() > 0:
                         break
 
-
-                self.set_state(RCAudioState.PIPELINE_EXEC)
-                self.pipeline.exec("on_save", clip_name)
-                self.set_state(RCAudioState.LISTENING)
+                
+            self.set_state(RCAudioState.PIPELINE_EXEC)
+            self.pipeline.exec("on_save", clip_name)
+            self.set_state(RCAudioState.LISTENING)
 
 
         logging.info("Stopping RCAudio..")
         self.stream.stop()
         os.rmdir(tmp_dir)
 
-class RCAudioThread(Thread):
+class RCAudioThread(RCThread):
     def __init__(self, config, stop_event, data_queue):
-        Thread.__init__(self)
-        self.config = config
-        self.stop_event = stop_event
-        self.queue = data_queue
+        RCThread.__init__(self, "t_audio", config, stop_event, data_queue)
 
     def run(self):
         audio = RCAudio(self.config, self.stop_event, self.queue) 
+
+        self.set_ready(True)
         audio.run()

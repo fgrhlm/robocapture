@@ -1,12 +1,15 @@
 import logging
 
-from threading import Thread
+from threads import RCThread
 from pipeline import RCPipeline
 
 class RCVideo:
     def __init__(self, config, stop_event, data_queue):
         self.stop_event = stop_event
         self.queue = data_queue
+        self.config = config
+        
+        self.pipeline = RCPipeline(self.config)
 
     def run(self):
         logging.info("Starting RCVideo..")
@@ -17,15 +20,12 @@ class RCVideo:
 
         logging.info("Stopping RCVideo..")
 
-class RCVideoThread(Thread):
+class RCVideoThread(RCThread):
     def __init__(self, config, stop_event, data_queue):
-        Thread.__init__(self)
-        self.stop_event = stop_event
-        self.queue = data_queue
-        self.pipeline = RCPipeline(
-            config.get("pipeline")
-        )
+        Thread.__init__(self, "t_video", config, stop_event, data_queue)
 
     def run(self):
-        video = RCVideo(self.pipeline, self.stop_event, self.queue) 
+        video = RCVideo(self.config, self.stop_event, self.queue) 
+        
+        self.set_ready(True)
         video.run()
