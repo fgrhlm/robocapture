@@ -9,20 +9,22 @@ from pipeline import RCPipelineResult
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
+# https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html
+# https://docs.ultralytics.com/modes/predict/
+# https://www.geeksforgeeks.org/object-detection-with-yolo-and-opencv/
+# https://github.com/ultralytics/ultralytics/blob/main/docs/en/usage/simple-utilities.md
+# https://docs.ultralytics.com/modes/predict/#inference-arguments
+
 class RCYolo:
     def __init__(self, config):
         self.name = "yolo"
         self.config = config["ext"]["yolo"]
 
-        try:
-            self.yolo = YOLO(
-                self.config["checkpoint"],
-                task="detect",
-                verbose=self.config["verbose"]
-            )
-        except Exception as e:
-            logging.error(f"Cant load YOLO: {e}")
-            raise Exception("Failed to load yolo!")
+        self.yolo = YOLO(
+            self.config["checkpoint"],
+            task="detect",
+            verbose=self.config["verbose"]
+        )
 
         if self.config["cpu"]:
             self.yolo = self.yolo.to("cpu")

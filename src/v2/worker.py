@@ -11,5 +11,5 @@ class RCWorker:
         try:
             self.pipeline = RCPipeline(self.config)
         except Exception as e:
-            logging.error(f"Could not load pipeline!")
+            logging.error(f"Failed to load pipeline! {e}")
             self.stop_event.set()

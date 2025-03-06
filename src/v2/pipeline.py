@@ -21,17 +21,13 @@ class RCPipeline:
         self.on_data = []
         self.on_save = []
 
-        try:
-            if "on_data" in self.config["pipeline"]:
-                logging.debug("Loading 'on_data' pipeline steps..")
-                self.on_data = self.load_modules(config["pipeline"]["on_data"])
-            
-            if "on_save" in self.config["pipeline"]:
-                logging.debug("Loading 'on_save' pipeline steps..")
-                self.on_save = self.load_modules(config["pipeline"]["on_save"])
-        except Exception as e:
-            logging.error("Failed to load pipeline modules!")
-            raise Exception("Failed to load RCPipeline!")
+        if "on_data" in self.config["pipeline"]:
+            logging.debug("Loading 'on_data' pipeline steps..")
+            self.on_data = self.load_modules(config["pipeline"]["on_data"])
+        
+        if "on_save" in self.config["pipeline"]:
+            logging.debug("Loading 'on_save' pipeline steps..")
+            self.on_save = self.load_modules(config["pipeline"]["on_save"])
 
 
     def load_modules(self, mod_list):
