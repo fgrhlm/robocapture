@@ -11,6 +11,7 @@ from soundfile import SoundFile
 from queue import Queue
 from tempfile import mkdtemp
 from threads import RCThread
+from worker import RCWorker
 from time import thread_time
 
 # https://numpy.org/doc/stable/reference/generated/numpy.fft.fft.html
@@ -31,17 +32,16 @@ class RCAudioState(Enum):
     HOLDING = 3
     PIPELINE_EXEC = 4
 
-class RCAudio:
-    def __init__(self, config, stop_event, out_queue):
-        self.config = config
-        self.stop_event = stop_event
+class RCAudio(RCWorker):
+    def __init__(self, config, stop_event, data_queue):
+        RCWorker.__init__(self, config, stop_event, data_queue)
 
         self.state = RCAudioState.STOPPED
         self.level = 0
         self.activity = False
 
         self.buffer_queue = Queue()
-        self.out_queue = out_queue
+        self.out_queue = data_queue
 
         self.device = config["device"] or None
         self.sample_rate = config["sample_rate"] or None
@@ -55,8 +55,6 @@ class RCAudio:
             "activity_end": 0,
         }
         
-        self.pipeline = RCPipeline(self.config)
-
         try:
             self.stream = InputStream(
                 blocksize = self.blksize,
@@ -156,6 +154,7 @@ class RCAudio:
 
             logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
             results = self.pipeline.exec("on_save", clip_name)
+            os.remove(clip_name)
             self.out_queue.put(results)
             
             self.set_state(RCAudioState.LISTENING)

@@ -6,7 +6,7 @@
         "port": 9001
     },
     "audio": {
-        "enabled": true,
+        "enabled": false,
         "device": 0,
         "sample_rate": 44100,
         "channels": 1,
@@ -15,6 +15,7 @@
         "rec_threshold": 0.4,
         "rec_hold": 0.1,
         "pipeline": {
+            "verbose": true,
             "on_save": ["audio.whisper"]
         },
         "ext": {
@@ -22,10 +23,11 @@
         }
     },
     "video": {
-        "enabled": false,
-        "device": 0,
+        "enabled": true,
+        "device": "media/test.mp4",
         "mode": "normal",
         "pipeline": {
+            "verbose": false,
             "on_data": [
                 "video.yolo",
                 "video.yunet"
@@ -33,7 +35,7 @@
         },
         "ext": {
             "yolo": {
-                "checkpoint": "models/yolov11n.pt",
+                "checkpoint": "models/yolo11n.pt",
                 "cpu": false,
                 "min_conf": 0.5,
                 "img_size": [384, 640],

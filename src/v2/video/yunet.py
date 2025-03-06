@@ -9,4 +9,4 @@ class RCYunet:
     def process(self, data):
         pass
 
-pipeline_step = RCYunet
+step = RCYunet

@@ -72,6 +72,9 @@ class RCServer:
         self.start_workers()
 
         while True:
+            if self.stop_event.is_set():
+                break
+
             sleep(1)
 
 if __name__=="__main__":

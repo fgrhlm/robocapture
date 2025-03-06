@@ -21,13 +21,18 @@ class RCPipeline:
         self.on_data = []
         self.on_save = []
 
-        if "on_data" in self.config["pipeline"]:
-            logging.debug("Loading 'on_data' pipeline steps..")
-            self.on_data = self.load_modules(config["pipeline"]["on_data"])
-        
-        if "on_save" in self.config["pipeline"]:
-            logging.debug("Loading 'on_save' pipeline steps..")
-            self.on_save = self.load_modules(config["pipeline"]["on_save"])
+        try:
+            if "on_data" in self.config["pipeline"]:
+                logging.debug("Loading 'on_data' pipeline steps..")
+                self.on_data = self.load_modules(config["pipeline"]["on_data"])
+            
+            if "on_save" in self.config["pipeline"]:
+                logging.debug("Loading 'on_save' pipeline steps..")
+                self.on_save = self.load_modules(config["pipeline"]["on_save"])
+        except Exception as e:
+            logging.error("Failed to load pipeline modules!")
+            raise Exception("Failed to load RCPipeline!")
+
 
     def load_modules(self, mod_list):
         logging.debug(f"Pipeline steps in config: {' '.join([n for n in mod_list])}")
@@ -64,7 +69,9 @@ class RCPipeline:
         results = []
 
         for i,step in enumerate(steps):
-            logging.debug(f"Pipeline exec: {step.name or i}")
+            if self.config["pipeline"]["verbose"]:
+                logging.debug(f"Pipeline exec: {step.name or i}")
+
             try:
                 result = step.process(data)
                 results.append(result)
