@@ -4,7 +4,6 @@ import numpy as np
 
 from pipeline import RCPipelineResult
 
-print("HELLOOOO")
 class RCWhisper:
     def __init__(self, config: dict):
         self.name = "whisper"
@@ -17,13 +16,12 @@ class RCWhisper:
         #clip = whisper.load_audio(clip)
         #clip = whisper.pad_or_trim(clip)
 
-        logging.info(f"Detecting: {clip}")
+        logging.debug(f"Detecting: {clip}")
         #mel = whisper.log_mel_spectrogram(clip, n_mels=self.model.dims.n_mels).to(self.model.device)
         #options = whisper.DecodingOptions()
         #result = whisper.decode(self.model, mel, options)
         try:
             result = self.model.transcribe(clip)
-            print(result)
         except Exception as e:
             logging.error(f"Could not transcribe: {clip}")
 

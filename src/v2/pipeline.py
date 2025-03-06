@@ -53,8 +53,6 @@ class RCPipeline:
         return modules
 
     def exec(self, event, data):
-        logging.debug(f"{event} event triggered!")
-
         match event:
             case "on_data":
                 steps = self.on_data
@@ -71,6 +69,6 @@ class RCPipeline:
                 result = step.process(data)
                 results.append(result)
             except Exception as e:
-                logging.error(f"Pipeline step failed: {e}")
+                logging.error(f"Pipeline exec failed ({step.name or i}) failed: {e}")
 
         return results

@@ -11,6 +11,7 @@ from soundfile import SoundFile
 from queue import Queue
 from tempfile import mkdtemp
 from threads import RCThread
+from time import thread_time
 
 # https://numpy.org/doc/stable/reference/generated/numpy.fft.fft.html
 # https://stackoverflow.com/questions/4315989/python-frequency-analysis-of-sound-files
@@ -27,7 +28,8 @@ class RCAudioState(Enum):
     STOPPED = 0
     WRITING = 1
     LISTENING = 2
-    PIPELINE_EXEC = 3
+    HOLDING = 3
+    PIPELINE_EXEC = 4
 
 class RCAudio:
     def __init__(self, config, stop_event, out_queue):
@@ -36,6 +38,7 @@ class RCAudio:
 
         self.state = RCAudioState.STOPPED
         self.level = 0
+        self.activity = False
 
         self.buffer_queue = Queue()
         self.out_queue = out_queue
@@ -44,7 +47,13 @@ class RCAudio:
         self.sample_rate = config["sample_rate"] or None
         self.channels = config["channels"] or 1
         self.blksize = config["blksize"] or 128
-        self.rec_threshold = 0.6
+        self.rec_threshold = config["rec_threshold"] or 0.5
+        self.rec_hold = config["rec_hold"] or 0.2
+        
+        self.timers = {
+            "activity_start": 0,
+            "activity_end": 0,
+        }
         
         self.pipeline = RCPipeline(self.config)
 
@@ -66,17 +75,41 @@ class RCAudio:
     def set_state(self, state):
         self.state = state
 
+    def get_hold(self):
+        start = self.timers["activity_end"]
+        end = thread_time()
+       
+        return (end - start) > self.rec_hold
+
     def callback(self, data, frames, time, status):
+        st = self.get_state()
+        if st == RCAudioState.PIPELINE_EXEC:
+            return
+
         d = data.copy()
 
         self.level = np.linalg.norm(d)
         
-        if self.get_state() != RCAudioState.PIPELINE_EXEC:
-            if (self.level < self.rec_threshold):
+        activity = (self.level > self.rec_threshold)
+
+        if self.activity and not activity:
+            self.timers["activity_end"] = thread_time()
+            self.set_state(RCAudioState.HOLDING)
+
+        if activity and not self.activity:
+            self.timers["activity_start"] = thread_time()
+            self.set_state(RCAudioState.WRITING)
+            
+        if not activity and not self.activity:
+            if self.get_hold():
                 self.set_state(RCAudioState.LISTENING)
             else:
-                self.set_state(RCAudioState.WRITING)
-                self.buffer_queue.put(d)
+                self.set_state(RCAudioState.HOLDING)
+
+        self.activity = activity
+
+        if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):
+            self.buffer_queue.put(d)
 
     def run(self, cb=None):
         logging.info("Starting RCAudio..")
@@ -109,17 +142,22 @@ class RCAudio:
                         self.set_state(RCAudioState.PIPELINE_EXEC)
                         self.pipeline.exec("on_data", data)
                         self.set_state(RCAudioState.LISTENING)
-
-                    if self.get_state() == RCAudioState.WRITING:
+                    
+                    st = self.get_state()
+                    if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):
                         file.write(data)
                         continue
                     
                     if file.tell() > 0:
                         break
 
-                
+            
             self.set_state(RCAudioState.PIPELINE_EXEC)
-            self.pipeline.exec("on_save", clip_name)
+
+            logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
+            results = self.pipeline.exec("on_save", clip_name)
+            self.out_queue.put(results)
+            
             self.set_state(RCAudioState.LISTENING)
 
 

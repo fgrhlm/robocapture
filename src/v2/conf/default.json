@@ -12,6 +12,8 @@
         "channels": 1,
         "blksize": 128,
         "mode": "voice_activity",
+        "rec_threshold": 0.4,
+        "rec_hold": 0.1,
         "pipeline": {
             "on_save": ["audio.whisper"]
         },
