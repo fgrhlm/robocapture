@@ -1,179 +1,109 @@
 import sys
-import signal
+import os
 import json
-import cv2 as cv
+import tomllib
 import numpy as np
-import platform
-import GPUtil
+import logging
 
-from numpy import fft
-from cpuinfo import get_cpu_info
-from base64 import b64encode
-from queue import Queue, Full
-from threading import Event, Thread
 from time import sleep
-from capture import RCVideoCapture, RCAudioCapture
-from cap_yolo import RCYolo
-from cap_yunet import RCYunet
-from cap_whisper import RCWhisper
-from api_socket import APISocket
-from utils.logger import logger 
-from result import RCYoloResults, RCYunetResults, RCWhisperResults
+from importlib import import_module
+from queue import Queue
+from threading import Event, Thread
+
+from config import RCConfig
+from audio import RCAudioThread
+from video import RCVideoThread
+from sock import RCWebSocket
 
 # https://docs.python.org/3/library/threading.html
 # https://www.geeksforgeeks.org/multithreading-python-set-1/
 # https://docs.python.org/3/library/queue.html#queue.SimpleQueue
-# https://numpy.org/doc/stable/reference/generated/numpy.fft.fft.html
-# https://stackoverflow.com/questions/4315989/python-frequency-analysis-of-sound-files
 
-# Data sharing between threads
-RCVideoResultsQueue: Queue = Queue()
-RCAudioResultsQueue: Queue = Queue()
-RCAudioDataQueue: Queue = Queue()
-RCVideoDataQueue: Queue = Queue()
-RCAudioClipsQueue: Queue = Queue()
 
-# Signaling
-RCStopEvent: Event = Event()
+class RCServer:
+    """Manages audio/video worker threads and serves pipeline results."""
+    def __init__(self, config_path):
+        with open("pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+            self.version = data["project"]["version"]
 
-def worker_audio(config,stop_event):
-    cap: RCAudioCapture = RCAudioCapture(config, rec_threshold=1.0)
+        print(f"RoboCapture v{self.version}")
 
-    def meta(data):
-        level = np.linalg.norm(data)
-        transform = fft.fft(data)
-        bandwidth = fft.fftfreq(len(transform))
-
-        payload = {
-            "bytes": data,
-            "level": level,
-            "spectrum": {
-                "fft": transform,
-                "bandwidth": bandwidth
-            }
+        self.config = RCConfig(config_path)
+        self.config_audio = self.config.get("audio")
+        self.config_video = self.config.get("video")
+        self.config_socket = self.config.get("socket")
+        self.config_api = self.config.get("api")
+       
+        # Shared variables (threading)
+        self.share = {
+            "video": Queue(),
+            "audio": Queue()
         }
 
-        RCAudioDataQueue.put(payload)
+        self.stop_event = Event()
 
-    cap.process(RCAudioClipsQueue, stop_event=stop_event, f=meta)
+        # Threads
+        self.threads = []
 
-def worker_audio_post(stop_event,file_queue):
-    whisper = RCWhisper(config)
-    while not stop_event.is_set():
-        try:
-            file = file_queue.get()
-            results = whisper.detect(file)
-            RCAudioResultsQueue.put(results)
-        except Exception as e:
-            print(e)
+        if self.config_audio.get("enabled"): 
+            self.threads.append(
+                RCAudioThread(
+                    self.config_audio,
+                    self.stop_event,
+                    self.share.get("audio")
+                )
+            )
 
-def worker_video(config,device,yolo_path,yunet_path,stop_event):
-    cap: RCVideoCapture = RCVideoCapture(device)
-    yolo: RCYolo = RCYolo(yolo_path,config)
-    yunet: RCYunet = RCYunet(yunet_path, config)
+        if self.config_video.get("enabled"): 
+            self.threads.append(
+                RCVideoThread(
+                    self.config_video,
+                    self.stop_event,
+                    self.share.get("video")
+                )
+            )
 
-    sys_os = platform.freedesktop_os_release()
-    sys_cpu = get_cpu_info()
-    sys_gpus = GPUtil.getGPUs()
+    def start_workers(self):
+        """Starts worker threads."""
+        logging.info("Starting worker threads..")
+        for thread in self.threads:
+            thread.start()
 
-    def process(frame):
-        b64_frame: str = b64encode(cv.imencode(".jpg", frame)[1]).decode()
-        yolo_results: RCYoloResults = yolo.detect(frame)
-        yunet_results: RCYunetResults = yunet.detect(frame)
-        
-        meta = {
-            "system": {
-                "sys": f'{sys_cpu["arch"]} {sys_os["PRETTY_NAME"]}',
-                "cpu": sys_cpu["brand_raw"],
-                "gpu": [n.name for n in sys_gpus],
-                "gpuDriver": [n.driver for n in sys_gpus],
-                "python": sys_cpu["python_version"],
-                "opencv": cv.__version__,
-                "fps": cap.fps,
-                "captureDevice": device
-            },
-            "yolo": {
-                "inputSize": yolo.config["img_size"],
-                "chkpt": yolo.config["chkpt"].split("/")[-1]
-            },
-            "yunet": {
-                "inputSize": yunet.config["img_size"],
-                "chkpt": yunet.config["chkpt"].split("/")[-1]
-            },
-            "yoloInputSize": yolo.config["img_size"],
-            "yunetInputSize": yunet.config["img_size"],
-        }
-
-        results = [yolo_results, yunet_results, meta]
-        
-        try:
-            RCVideoResultsQueue.put(results)
-        except Full:
-            logger("RCServer", "Video Results Queue is full!", level=LogLevel.WARNING)
-
-        try:
-            RCVideoDataQueue.put(b64_frame)
-        except Full:
-            logger("RCServer", "Frames Queue is full!", level=LogLevel.WARNING)
-
-    cap.process(process, stop_event=stop_event)
-
-def worker_socket(config,port,stop_event):
-    # API socket connection
-    api = APISocket(port=port)
-    api.start_socket(
-        audio_results_queue=RCAudioResultsQueue,
-        video_results_queue=RCVideoResultsQueue,
-        audio_data_queue=RCAudioDataQueue,
-        video_data_queue=RCVideoDataQueue,
-        stop_event=stop_event
-    )
-
-if __name__=="__main__":
-    if len(sys.argv) != 2:
-        print("USAGE: $ server.py <config file>")
-        exit(1)
-   
-    config_path = sys.argv[1]
+            while not thread.is_ready():
+                sleep(0.5)
     
-    logger("RCServer", f"Loading config: {config_path}")
-    with open(config_path) as f:
-        config = json.load(f)
-
-    # Capture device (dev or file)
-    device: str = config["videoCapture"]["device"]
-
-    # YOLO path
-    yolo_path: str = config["yolo"]["chkpt"]
-    
-    # Yunet path
-    yunet_path: str = config["yunet"]["chkpt"]
-
-    # API
-    port: int = config["websocket"]["port"]
-    
-    # Create and start threads
-    threads: list[Thread, Thread] = [
-        Thread(target=worker_video, args=(config, device, yolo_path, yunet_path, RCStopEvent)),
-        Thread(target=worker_audio, args=(config, RCStopEvent)),
-        Thread(target=worker_audio_post, args=(RCStopEvent, RCAudioClipsQueue)),
-        Thread(target=worker_socket, args=(config, port, RCStopEvent))
-    ]
-
-    for t in threads:
-        t.start()
-   
-    while not RCStopEvent.is_set():
-        try:
-            for t in threads:
+    def join_workers(self):
+        """Joins worker threads."""
+        while True in [n.is_alive() for n in self.threads]:
+            for t in self.threads:
                 t.join(1)
-        except KeyboardInterrupt as e:
-            logger("RCServer", "Shutting down..")
-            RCStopEvent.set()
-            break
+            
+    def run(self):
+        """Starts the workers and server."""
+        logging.info("Starting server..")
+        self.start_workers()
+        
+        sock = RCWebSocket(
+            self.config_socket,
+            self.stop_event,
+            self.share["audio"],
+            self.share["video"]
+        )
 
-    logger("RCServer", "Goodbye!")
-    RCStopEvent.set()
+        sock.start()
+        
+if __name__=="__main__":
+    if len(sys.argv) < 2:
+        print("Please provide path to config.")
+        print("usage: rcserver <path-to-config>")
+        sys.exit(1)
 
-    for t in threads:
-        t.join()
+
+    try:
+        config_path = sys.argv[1]
+        server = RCServer(config_path)
+        server.run()
+    except KeyboardInterrupt:
+        server.stop_event.set()
+        server.join_workers()

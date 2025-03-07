@@ -24,7 +24,7 @@
     },
     "video": {
         "enabled": true,
-        "device": "media/test.mp4",
+        "device": "tests/media/video.mp4",
         "mode": "normal",
         "pipeline": {
             "verbose": false,
