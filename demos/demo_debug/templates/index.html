@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>RoboCapture Debug</title>
+  </head>
+  <body>
+    <script type="text/javascript" src="js/robocapture.js"></script>
+    <h1>RoboCapture Debug</h1>
+
+    <script type="text/javascript">
+      rc = new RoboCapture("localhost", 9001, (d) => { console.log(d); })
+    </script>
+  </body>
+</html>

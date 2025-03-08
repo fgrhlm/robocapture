@@ -22,8 +22,8 @@ class RCWebSocket:
 
         # Serialize payload dict to json string
         payload = {
-            "audio": audio,
-            "video": video
+            "audio": {n.name:n.data for n in audio},
+            "video": {n.name:n.data for n in video}
         }
 
         payload: str = json.dumps(payload)
@@ -46,11 +46,15 @@ class RCWebSocket:
                     break
 
                 try:
-                    next_audio = audio_queue.get()
-                    next_video = video_queue.get()
-                except Exception as e:
-                    logging.warn(f"Could not get data from queue! {e}")
-                    
+                    next_audio = self.audio_queue.get()
+                except Empty:
+                    next_audio = []
+
+                try:
+                    next_video = self.video_queue.get()
+                except Empty:
+                    next_video = []
+
                 payload: str = self.preprocess_payload(
                     next_audio,
                     next_video

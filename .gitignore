@@ -3,7 +3,7 @@ client/js/package-lock.json
 client/js/node_modules
 
 # python
-server/venv/
+venv/
 server/**/__pycache__/
 server/**/.pytest_cache/
 server/**/.coverage/

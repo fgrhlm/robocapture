@@ -22,7 +22,6 @@ class RCYolo:
 
         self.yolo = YOLO(
             self.config["checkpoint"],
-            task="detect",
             verbose=self.config["verbose"]
         )
 
@@ -32,7 +31,7 @@ class RCYolo:
     def process(self, frame):
         f = cv.resize(frame, (640, 640)) 
 
-        results = self.yolo(
+        raw_results: Results = self.yolo(
             f,
             verbose=self.config["verbose"],
             stream=self.config["stream"],
@@ -41,9 +40,27 @@ class RCYolo:
             max_det=self.config["max_detect"],
             vid_stride=self.config["vid_stride"]
         )
-       
+
+        results = []
+        for n in raw_results:
+            classes = [int(x) for x in n.boxes.cls.cpu().numpy()]
+            confs = [float(x) for x in n.boxes.conf.cpu().numpy()]
+            boxes = n.boxes.xywh.cpu().numpy()
+
+            for _class, _conf, _box in zip(classes, confs, boxes):
+                results.append({
+                    "class": self.yolo.names[_class],
+                    "conf": _conf,
+                    "box": {
+                        "x": int(_box[0]),
+                        "y": int(_box[1]),
+                        "w": int(_box[2]),
+                        "h": int(_box[3])
+                    }
+                })
+
         results = RCPipelineResult("yolo", results)
-        
+
         return results
 
 step = RCYolo

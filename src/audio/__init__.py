@@ -5,7 +5,7 @@ import numpy as np
 
 from uuid import uuid1
 from enum import Enum
-from pipeline import RCPipeline
+from pipeline import RCPipeline, RCPipelineResult
 from sounddevice import InputStream
 from soundfile import SoundFile
 from queue import Queue
@@ -25,6 +25,11 @@ from time import thread_time
 # https://stackoverflow.com/questions/40138031/how-to-read-realtime-microphone-audio-volume-in-python-and-ffmpeg-or-similar
 # https://stackoverflow.com/questions/26541416/generate-temporary-file-names-without-creating-actual-file-in-python
 
+"""
+    TODO:
+    - Fix max clip len, defined in config, enforced by checking current file size
+
+"""
 class RCAudioState(Enum):
     STOPPED = 0
     WRITING = 1
@@ -39,14 +44,15 @@ class RCAudio(RCWorker):
         self.state = RCAudioState.STOPPED
         self.level = 0
         self.activity = False
-        self.buffer_queue = Queue()
         self.device = config["device"] or None
         self.sample_rate = config["sample_rate"] or None
         self.channels = config["channels"] or 1
         self.blksize = config["blksize"] or 128
         self.rec_threshold = config["rec_threshold"] or 0.5
         self.rec_hold = config["rec_hold"] or 0.2
-        
+        self.max_clip_len = (self.config["max_clip_len"] * (self.sample_rate / self.blksize)) or 0
+        self.buffer_queue = Queue(maxsize = None if self.max_clip_len < 1 else self.max_clip_len)
+
         self.timers = {
             "activity_start": 0,
             "activity_end": 0,
@@ -152,6 +158,13 @@ class RCAudio(RCWorker):
             logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
             results = self.pipeline.exec("on_save", clip_name)
             os.remove(clip_name)
+
+            meta = RCPipelineResult("meta", {
+                "level": 0,
+                "activity": 0
+            })
+
+            results.append(meta)
             self.queue.put(results)
             
             self.set_state(RCAudioState.LISTENING)

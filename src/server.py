@@ -30,15 +30,19 @@ class RCServer:
         print(f"RoboCapture v{self.version}")
 
         self.config = RCConfig(config_path)
+        self.config_server = self.config.get("server")
         self.config_audio = self.config.get("audio")
         self.config_video = self.config.get("video")
         self.config_socket = self.config.get("socket")
-        self.config_api = self.config.get("api")
        
         # Shared variables (threading)
         self.share = {
-            "video": Queue(),
-            "audio": Queue()
+            "video": Queue(
+                maxsize=None if self.config_server["max_video_queue"] < 1 else self.config_server["max_video_queue"]
+            ),
+            "audio": Queue(
+                maxsize=None if self.config_server["max_audio_queue"] < 1 else self.config_server["max_audio_queue"]
+            )
         }
 
         self.stop_event = Event()
@@ -83,7 +87,11 @@ class RCServer:
         """Starts the workers and server."""
         logging.info("Starting server..")
         self.start_workers()
-        
+       
+        while False in [n.is_ready() for n in self.threads]:
+            print([n.is_ready() for n in self.threads])
+            sleep(1)
+
         sock = RCWebSocket(
             self.config_socket,
             self.stop_event,
