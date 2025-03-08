@@ -92,13 +92,12 @@ class RCServer:
         )
 
         sock.start()
-        
+
 if __name__=="__main__":
     if len(sys.argv) < 2:
         print("Please provide path to config.")
         print("usage: rcserver <path-to-config>")
         sys.exit(1)
-
 
     try:
         config_path = sys.argv[1]

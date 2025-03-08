@@ -29,6 +29,7 @@
       </div>
     </div>
 
+    <script type="text/javascript" src="robocapture.js"/>
     <script type="text/javascript">
       // Elements
       const elemYolo = document.getElementById("yolo-data");
@@ -41,11 +42,9 @@
       const canvas = document.getElementById("frame-canvas")
       const ctx = canvas.getContext("2d");
 
-      // Socket
-      const host = "localhost"
-      const port = 9001
-      const socket = new WebSocket(`ws://${host}:${port}`);
-      
+      // RoboCapture
+      const rc = RoboCapture("localhost", 9001, on_new_data);
+
       // Utils
       const addToList = (ul_elem, text) => {
           let entry = document.createElement("li");
@@ -78,21 +77,8 @@
         ctx.stroke();
       }
 
-      socket.addEventListener("open", e => {
-        console.log("Connection opened!");
-        elemStatus.textContent = "up";
-        elemStatus.className = "light-green";
-      });
-
-      socket.addEventListener("close", e => {
-        console.log("Connection closed!");
-        elemStatus.textContent = "down";
-        elemStatus.className = "light-red-2";
-      })
-
-      socket.addEventListener("message", e => {
-        res = JSON.parse(e.data);
-        console.log(res) 
+      const on_new_data = data => {
+        /*
         // Set result titles
         elemYoloTitle.textContent = `(YOLO) ${res.meta.yolo.chkpt}: (${res.meta.yolo.inputSize})`;
         elemYunetTitle.textContent = `(Yunet) ${res.meta.yunet.chkpt}: (${res.meta.yunet.inputSize})`;
@@ -139,10 +125,8 @@
             let w = (box[2] * 2) - (box[0] * 2);
             let h = (box[3] * 2) - (box[1]* 2);
             drawCircle(ctx,x + (w/2),y + (h/2),((w+h) / Math.PI),2,"red");
-          })
-        })
-      })
-
+          })*/
+      }
     </script>
     <style>
       html, body {

@@ -1,6 +1,15 @@
-venv/
-models/
-**/__pycache__/
-**/.pytest_cache/
-**/.coverage/
+# javascript / node / npm
+client/js/package-lock.json
+client/js/node_modules
+
+# python
+server/venv/
+server/**/__pycache__/
+server/**/.pytest_cache/
+server/**/.coverage/
+
+# assets
+server/models/
+
+# docs
 docs/build/
