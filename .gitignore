@@ -1,15 +1,11 @@
-# javascript / node / npm
-client/js/package-lock.json
-client/js/node_modules
-
 # python
 venv/
-server/**/__pycache__/
-server/**/.pytest_cache/
-server/**/.coverage/
+**/__pycache__/
+**/.pytest_cache/
+**/.coverage/
 
 # assets
-server/models/
+models/
 
 # docs
 docs/build/

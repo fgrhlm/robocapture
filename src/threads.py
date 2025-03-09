@@ -10,6 +10,9 @@ class RCThread(Thread):
         self.stop_event = stop_event
         self.queue = data_queue
 
+    def stop(self):
+        self.stop_event.set()
+
     def set_ready(self, ready):
         self.ready = ready
 
@@ -17,6 +20,5 @@ class RCThread(Thread):
         return self.ready
 
     def run(self):
-        logging.error("Thread target function is empty!")
-        self.stop_event.set()
+        pass
 

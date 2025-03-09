@@ -4,6 +4,7 @@ from cv2 import VideoCapture, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT, CAP_P
 from threads import RCThread
 from pipeline import RCPipeline
 from worker import RCWorker
+from queue import Full, Empty, Queue
 
 class RCVideo(RCWorker):
     def __init__(self, config, stop_event, data_queue):
@@ -44,7 +45,11 @@ class RCVideo(RCWorker):
             # DEBUG DEBUG DEBUG
 
             results = self.pipeline.exec("on_data", frame)
-            self.queue.put(results)
+
+            try:
+                self.queue.put(results)
+            except Full:
+                logging.debug("Video out queue full!")
 
             self.timer.stop()
             self.fps = self.timer.getFPS()

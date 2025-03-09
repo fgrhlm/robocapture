@@ -1,7 +1,7 @@
 {
   "server": {
-    "max_audio_queue": 1,
-    "max_video_queue": 1
+    "max_audio_queue": 10000,
+    "max_video_queue": 10000
   },
   "log": {
     "logLevel": "NOTSET"

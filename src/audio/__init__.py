@@ -8,7 +8,7 @@ from enum import Enum
 from pipeline import RCPipeline, RCPipelineResult
 from sounddevice import InputStream
 from soundfile import SoundFile
-from queue import Queue
+from queue import Queue, Full, Empty
 from tempfile import mkdtemp
 from threads import RCThread
 from worker import RCWorker
@@ -110,7 +110,10 @@ class RCAudio(RCWorker):
         self.activity = activity
 
         if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):
-            self.buffer_queue.put(d)
+            try:
+                self.buffer_queue.put_nowait(d)
+            except Full:
+                logging.debug("Audio buffer full!")
 
     def run(self, cb=None):
         logging.info("Starting RCAudio..")
@@ -136,13 +139,9 @@ class RCAudio(RCWorker):
                 while True:
                     data = self.buffer_queue.get()
 
-                    if not data.any():
-                        continue
-
-                    if cb is not None:
-                        self.set_state(RCAudioState.PIPELINE_EXEC)
-                        self.pipeline.exec("on_data", data)
-                        self.set_state(RCAudioState.LISTENING)
+                    #self.set_state(RCAudioState.PIPELINE_EXEC)
+                    #on_data_results = self.pipeline.exec("on_data", data)
+                    #self.set_state(RCAudioState.LISTENING)
                     
                     st = self.get_state()
                     if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):
@@ -156,7 +155,7 @@ class RCAudio(RCWorker):
             self.set_state(RCAudioState.PIPELINE_EXEC)
 
             logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
-            results = self.pipeline.exec("on_save", clip_name)
+            on_save_results = self.pipeline.exec("on_save", clip_name)
             os.remove(clip_name)
 
             meta = RCPipelineResult("meta", {
@@ -164,9 +163,9 @@ class RCAudio(RCWorker):
                 "activity": 0
             })
 
-            results.append(meta)
-            self.queue.put(results)
-            
+            on_save_results.append(meta)
+
+            self.queue.put(on_save_results)
             self.set_state(RCAudioState.LISTENING)
 
 
