@@ -1,6 +1,0 @@
-[project]
-name = "robocapture"
-version = "0.1.0"
-dependencies = [
-    'importlib-metadata; python_version>"3.13"',
-]

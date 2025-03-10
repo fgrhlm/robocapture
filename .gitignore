@@ -4,9 +4,11 @@ src/**/__pycache__/
 **/__pycache__/
 **/.pytest_cache/
 **/.coverage/
+v3/__pycache__
 
 # assets
 models/
+v3/models/
 
 # docs
 docs/build/
