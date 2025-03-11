@@ -7,8 +7,8 @@ class RCWhisper:
         self.name = "whisper"
         self.config = config
 
-        logging.info(f"Loading whisper model {self.config['model']}..")
-        self.model = whisper.load_model(self.config["model"],download_root="models")
+        logging.info(f"Loading whisper model {self.config['weights']}..")
+        self.model = whisper.load_model(self.config["weights"],download_root="models")
 
     def process(self, clip):
         #clip = whisper.load_audio(clip)

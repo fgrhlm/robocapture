@@ -1,4 +1,5 @@
 {
+  "server_type": "video",
   "device": "tests/media/video.mp4",
   "on_data": [
     {
@@ -36,7 +37,7 @@
     }
   ],
   "on_save": [],
-  "server": {
+  "socket": {
     "host": "127.0.0.1",
     "port": 9002
   },

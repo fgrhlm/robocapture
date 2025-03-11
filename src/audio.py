@@ -4,6 +4,7 @@ import logging
 import numpy as np
 import ext
 
+from worker import RCWorker
 from uuid import uuid1
 from enum import Enum
 from sounddevice import InputStream
@@ -35,12 +36,9 @@ class RCAudioState(Enum):
     HOLDING = 3
     PIPELINE_EXEC = 4
 
-class RCAudio:
-    def __init__(self, config, shared_queue, on_data, on_save):
-        self.config = config
-        self.shared_queue = shared_queue
-        self.on_data = on_data
-        self.on_save = on_save
+class RCAudio(RCWorker):
+    def __init__(self, config, queue, on_data, on_save):
+        RCWorker.__init__(self, "audio", config, queue, on_data=on_data, on_save=on_save)
         self.state = RCAudioState.STOPPED
         self.level = 0
         self.activity = False
@@ -57,7 +55,7 @@ class RCAudio:
             "activity_start": 0,
             "activity_end": 0,
         }
-        
+
         try:
             self.stream = InputStream(
                 blocksize = self.blksize,
@@ -65,10 +63,10 @@ class RCAudio:
                 device = self.device,
                 channels = self.channels,
                 callback = self.callback
-            ) 
+            )
         except Exception as e:
             logging.critical(f"Could not open input stream: {e}")
-    
+
     def get_state(self):
         return self.state
 
@@ -78,7 +76,7 @@ class RCAudio:
     def get_hold(self):
         start = self.timers["activity_end"]
         end = time()
-       
+
         return (end - start) > self.rec_hold
 
     def callback(self, data, frames, _time, status):
@@ -89,7 +87,7 @@ class RCAudio:
         d = data.copy()
 
         self.level = np.linalg.norm(d)
-        
+
         activity = (self.level > self.rec_threshold)
 
         if self.activity and not activity:
@@ -99,7 +97,7 @@ class RCAudio:
         if activity and not self.activity:
             self.timers["activity_start"] = time()
             self.set_state(RCAudioState.WRITING)
-            
+
         if not activity and not self.activity:
             if self.get_hold():
                 self.set_state(RCAudioState.LISTENING)
@@ -116,13 +114,13 @@ class RCAudio:
 
     def run(self):
         logging.info("Starting RCAudio..")
-        
+
         tmp_dir = mkdtemp()
         logging.debug(f"Created tmp dir: {tmp_dir}")
 
         self.stream.start()
 
-        while True:
+        while not self.stop_signal:
             clip_name = os.path.join(tmp_dir, f"{uuid1()}.wav")
 
             with SoundFile(
@@ -132,28 +130,27 @@ class RCAudio:
                 samplerate=self.sample_rate,
                 format="WAV"
             ) as file:
-                while True:
+                while not self.stop_signal:
                     data = self.buffer_queue.get()
 
                     if len(self.on_data) > 0:
                         on_data_res = ext.run(self.on_data, data)
-                        self.shared_queue.put(on_data_res)
+                        self.queue.put(on_data_res)
 
                     st = self.get_state()
                     if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):
                         file.write(data)
                         continue
-                    
+
                     if file.tell() > 0:
                         break
 
-            
             self.set_state(RCAudioState.PIPELINE_EXEC)
 
             logging.debug(f"New clip ({self.timers["activity_end"] - self.timers["activity_start"]}s): {clip_name}")
             if len(self.on_save) > 0:
                 on_save_results = ext.run(self.on_save, clip_name)
-                self.shared_queue.put(on_save_results)
+                self.queue.put(on_save_results)
             os.remove(clip_name)
 
             meta = {
@@ -164,10 +161,12 @@ class RCAudio:
                 }
             }
 
-            self.shared_queue.put(meta)
+            self.queue.put(meta)
             self.set_state(RCAudioState.LISTENING)
 
 
         logging.info("Stopping RCAudio..")
         self.stream.stop()
         os.rmdir(tmp_dir)
+
+new = RCAudio

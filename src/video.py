@@ -49,3 +49,5 @@ class RCVideo(RCWorker):
 
         self.stream.release()
         logging.info("RCVideo stopped!")
+
+new = RCVideo

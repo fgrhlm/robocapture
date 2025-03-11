@@ -1,4 +1,5 @@
 {
+  "server_type": "audio",
   "device": 0,
   "sample_rate": 44100,
   "channels": 1,
@@ -9,15 +10,15 @@
   "rec_hold": 0.1,
   "on_save": [
     {
-      "name": "ext_whisper", 
-      "path": "ext/audio/whisper.py", 
+      "name": "ext_whisper",
+      "path": "ext/audio/whisper.py",
       "config": {
         "weights": "tiny.en"
       }
     }
   ],
   "on_data": [],
-  "server": {
+  "socket": {
     "host": "127.0.0.1",
     "port": 9001
   },

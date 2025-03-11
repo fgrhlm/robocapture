@@ -7,7 +7,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 def load_modules(config, event):
     mod_list = config.get(event)
     modules = []
-   
+
     for n in mod_list:
         path = n["path"]
         name = n["name"]
@@ -20,7 +20,7 @@ def load_modules(config, event):
             mod = module_from_spec(spec)
             sys.modules[name] = mod
             spec.loader.exec_module(mod)
-        
+
         modules.append(mod.ext(config))
 
     return modules
