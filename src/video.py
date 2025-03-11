@@ -1,17 +1,18 @@
 import logging
+import ext
 
+from worker import RCWorker
 from cv2 import VideoCapture, CAP_PROP_FRAME_WIDTH, CAP_PROP_FRAME_HEIGHT, CAP_PROP_POS_FRAMES, TickMeter
-from asyncio import Queue
+from queue import Queue
 
-class RCVideo:
-    def __init__(self, config, shared_queue):
-        
+class RCVideo(RCWorker):
+    def __init__(self, config, queue, on_data, on_save):
+        RCWorker.__init__(self,"video",config, queue, on_data=on_data, on_save=on_save)
         self.timer = TickMeter()
-        self.device = self.config["device"]
-        self.shared_queue = shared_queue
-        
+        self.device = self.config.get("device")
+
         try:
-            logging.debug("Opening VideoCapture..")
+            logging.debug(f"Opening VideoCapture: {self.device}")
             self.stream = VideoCapture(self.device)
             self.input_dims = {
                 "w": int(self.stream.get(CAP_PROP_FRAME_WIDTH)),
@@ -21,13 +22,16 @@ class RCVideo:
             logging.error(f"Could not open VideoCapture! {e}")
             sys.exit()
 
-    async def run(self, ext_on_data):
+    def run(self):
         logging.info("Starting RCVideo..")
 
         while True:
+            if self.stop_signal:
+                break
+
             if not self.stream.isOpened():
                 break
-            
+
             self.timer.start()
             ret, frame = self.stream.read()
 
@@ -37,11 +41,11 @@ class RCVideo:
                 continue
             # DEBUG DEBUG DEBUG
 
-            on_data_results = ext_on_data(frame)
-            self.shared_queue.put(on_data_results)
+            on_data_results = ext.run(self.on_data, frame)
+            self.queue.put(on_data_results)
 
             self.timer.stop()
             self.fps = self.timer.getFPS()
-        
+
         self.stream.release()
-        logging.info("Stopping RCVideo..")
+        logging.info("RCVideo stopped!")

@@ -1,15 +1,13 @@
 import logging
 
-from pipeline import RCPipeline
-
 class RCWorker:
-    def __init__(self, config, stop_event, data_queue):
-        self.stop_event = stop_event
-        self.queue = data_queue
+    def __init__(self, name, config, queue, on_data=None, on_save=None):
+        self.name = name
         self.config = config
-   
-        try:
-            self.pipeline = RCPipeline(self.config)
-        except Exception as e:
-            logging.error(f"Failed to load pipeline! {e}")
-            self.stop_event.set()
+        self.queue = queue
+        self.stop_signal = False
+        self.on_data = on_data
+        self.on_save = on_save
+
+    def stop(self):
+        self.stop_signal = True

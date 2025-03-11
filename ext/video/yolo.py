@@ -5,7 +5,6 @@ import numpy as np
 import queue
 import json
 
-from pipeline import RCPipelineResult
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
@@ -18,10 +17,10 @@ from ultralytics.engine.results import Results
 class RCYolo:
     def __init__(self, config):
         self.name = "yolo"
-        self.config = config["ext"]["yolo"]
+        self.config = config
 
         self.yolo = YOLO(
-            self.config["checkpoint"],
+            self.config["weights"],
             verbose=self.config["verbose"]
         )
 
@@ -29,7 +28,7 @@ class RCYolo:
             self.yolo = self.yolo.to("cpu")
 
     def process(self, frame):
-        f = cv.resize(frame, (640, 640)) 
+        f = cv.resize(frame, (640, 640))
 
         raw_results: Results = self.yolo(
             f,
@@ -59,8 +58,9 @@ class RCYolo:
                     }
                 })
 
-        results = RCPipelineResult("yolo", results)
+        return {
+            "name": "yolo",
+            "data": results
+        }
 
-        return results
-
-step = RCYolo
+ext = RCYolo
