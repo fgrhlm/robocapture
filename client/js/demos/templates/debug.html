@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Debug</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script type="text/javascript" src="js/robocapture.js"></script>
+    <h1>RoboCapture Debug</h1>
+    <hr>
+    <div class="app">
+      <h2><span id="audio_status" class="fg-green">●</span>RCAudio</h2>
+      <div id="audio">
+      </div>
+      <hr>
+      <h2><span id="video_status" class="fg-green">●</span>RCVideo</h2>
+      <div id="viz">
+        <canvas id="c_frame" width="640" height="360">
+      </div>
+      <hr>
+      <h2>Ext</h2>
+      <div id="results">
+        <div class="data-container">
+          <span class="container-title bg-1">yolo</span>
+          <hr>
+          <ul id="output_yolo"></ul>
+        </div>
+        <div class="data-container">
+          <span class="container-title bg-2">yunet</span>
+          <hr>
+          <ul id="output_yunet"></ul>
+        </div>
+        <div class="data-container">
+          <span class="container-title bg-3">whisper</span>
+          <hr>
+          <ul id="output_whisper"></ul>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      const e_yolo = document.getElementById("output_yolo");
+      const e_yunet = document.getElementById("output_yunet");
+      const e_whisper = document.getElementById("output_whisper");
+      const e_audio_level = document.getElementById("level");
+
+      const e_canvas = document.getElementById("c_frame");
+      const e_canvas_frame = new OffscreenCanvas(640,360);
+      const e_canvas_yolo = new OffscreenCanvas(640,360);
+      const e_canvas_yunet = new OffscreenCanvas(640,360);
+
+      const ctx_main = e_canvas.getContext("2d");
+      const ctx_frame = e_canvas_frame.getContext("2d");
+      const ctx_yolo = e_canvas_yolo.getContext("2d");
+      const ctx_yunet = e_canvas_yunet.getContext("2d");
+
+      const drawRect = (ctx,x,y,w,h,color) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = `2px`;
+
+        ctx.beginPath();
+        ctx.rect(x,y,w,h);
+        ctx.stroke();
+      }
+
+      const drawCircle = (ctx,x,y,r,color) => {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = `2px`;
+
+        ctx.beginPath();
+        ctx.arc(x,y,r,0,2*Math.PI);
+        ctx.stroke();
+      }
+
+      const processVideoResults = (results) => {
+        e_yolo.innerText = "";
+        e_yunet.innerText = "";
+
+        results.forEach((result) => {
+          if(result["name"] === "yolo") {
+            ctx_yolo.clearRect(0,0,e_canvas_yolo.width,e_canvas_yolo.height);
+            result["data"].forEach((d) => {
+              let e_li = document.createElement("li");
+              let e_name = document.createElement("span");
+              let e_conf = document.createElement("span");
+              e_name.innerText = d["class"];
+              e_conf.innerText = d["conf"].toFixed(2);
+
+              e_li.appendChild(e_name);
+              e_li.appendChild(e_conf);
+              e_yolo.appendChild(e_li);
+
+              // Draw boxes
+              const box = d["box"];
+
+              let x = box["x"] - (box["w"] / 2);
+              let y = box["y"] - (box["h"] / 2);
+              let w = box["w"];
+              let h = box["h"];
+              drawRect(ctx_yolo,x,y,w,h,"blue");
+
+              ctx_yolo.font = "12px monospace";
+              ctx_yolo.fillStyle = "#FF00FF";
+              ctx_yolo.fillText(`${d["class"]}: ${d["conf"]}`, x, y);
+            });
+          }
+
+          if(result["name"] === "yunet") {
+            ctx_yunet.clearRect(0,0,e_canvas_yunet.width,e_canvas_yunet.height);
+            result["data"].forEach((d) => {
+              let e_li = document.createElement("li");
+              let e_name = document.createElement("span");
+              let e_conf = document.createElement("span");
+              e_name.innerText = d["class"];
+              e_conf.innerText = d["conf"].toFixed(2);
+
+              e_li.appendChild(e_name);
+              e_li.appendChild(e_conf);
+              e_yunet.appendChild(e_li);
+
+              // Draw circles
+              const box = d.box;
+
+              let x = (box["x"] * 2);
+              let y = (box["y"] * 2);
+              let w = (box["w"] * 2) - (box["x"] * 2);
+              let h = (box["h"] * 2) - (box["y"]* 2);
+              drawCircle(ctx_yunet,x + (w/2),y + (h/2),((w+h) / Math.PI),"red");
+            });
+          }
+
+          if(result["name"] === "frame") {
+            let frameImg = new Image()
+            frameImg.src = `data:image/jpeg;charset=utf-8;base64, ${result["data"]}`
+            frameImg.addEventListener("load", e => {
+              ctx_frame.drawImage(frameImg, 0, 0);
+            })
+          }
+
+          ctx_main.clearRect(0,0,e_canvas.width,e_canvas.height);
+          ctx_main.drawImage(e_canvas_frame,0,0);
+          ctx_main.drawImage(e_canvas_yolo,0,0);
+          ctx_main.drawImage(e_canvas_yunet,0,0);
+        });
+      };
+
+      rcVideo = new RoboCapture("localhost", 9002, (results) => {
+        processVideoResults(results);
+      });
+
+      //rcAudio = new RoboCapture("localhost", 9001, (results) => {
+      //  processAudioResults(results);
+      //});
+    </script>
+  </body>
+</html>

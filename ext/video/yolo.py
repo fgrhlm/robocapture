@@ -28,7 +28,7 @@ class RCYolo:
             self.yolo = self.yolo.to("cpu")
 
     def process(self, frame):
-        f = cv.resize(frame, (640, 640))
+        f = cv.resize(frame, (self.config["img_size"][0],self.config["img_size"][1]))
 
         raw_results: Results = self.yolo(
             f,

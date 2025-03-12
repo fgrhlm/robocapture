@@ -39,7 +39,7 @@ class RCYunet:
             box_h = box_y + int(n[3])
 
             results.append({
-                "name": "face",
+                "class": "face",
                 "conf": conf,
                 "box": {"x": box_x,"y": box_y,"w": box_w,"h": box_h}
             })

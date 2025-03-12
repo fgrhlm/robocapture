@@ -1,0 +1,90 @@
+html, body {
+  margin: 0;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+span {
+  font-size: 14px;
+  font-family: monospace;
+  padding: 2px;
+}
+
+hr {
+  width: 100%;
+}
+
+h1, h2, h3 {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 4px;
+  background-color: black;
+  color: white;
+}
+
+.bg-1 { background-color: #B7B1F2; }
+.bg-2 { background-color: #FFDCCC; }
+.bg-3 { background-color: #FBF3B9; }
+
+.fg-green { color: green; }
+.fg-red { color: red; }
+
+.app {
+  display: flex;
+  flex-direction: column;
+}
+
+.container-title {
+  padding: 2px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: monospace;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.data-container {
+  width: 100%;
+  margin: 4px;
+  padding: 4px;
+  border: 1px solid black;
+  min-height: 300px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.data-container h4 {
+  background-color: lightgray;
+  font-weight: bold;
+  color: black;
+}
+
+.data-container ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.data-container li {
+  font-family: monospace;
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.data-container li:nth-child(odd) {
+  background-color: lightgray;
+}
+
+#results {
+  display: flex;
+}
+
+#viz {
+  text-align: center;
+}

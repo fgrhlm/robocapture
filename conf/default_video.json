@@ -4,6 +4,12 @@
   "on_data": [
     {
       "enabled": true,
+      "name": "ext_frameb64",
+      "path": "ext/video/frameb64.py",
+      "config": {}
+    },
+    {
+      "enabled": true,
       "name": "ext_yolo",
       "path": "ext/video/yolo.py",
       "config": {
@@ -11,8 +17,8 @@
         "cpu": false,
         "min_conf": 0.5,
         "img_size": [
-          384,
-          640
+          640,
+          364
         ],
         "stream": true,
         "verbose": false,
