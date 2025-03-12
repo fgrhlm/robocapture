@@ -17,7 +17,13 @@
       }
     }
   ],
-  "on_data": [],
+  "on_data": [
+    {
+      "name": "ext_meta",
+      "path": "ext/audio/meta.py",
+      "config": {}
+    }
+  ],
   "socket": {
     "host": "127.0.0.1",
     "port": 9001

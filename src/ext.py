@@ -9,6 +9,9 @@ def load_modules(config, event):
     modules = []
 
     for n in mod_list:
+        if not n["enabled"]:
+            continue
+
         path = n["path"]
         name = n["name"]
         config = n["config"]

@@ -87,8 +87,11 @@ class RCAudio(RCWorker):
         d = data.copy()
 
         self.level = np.linalg.norm(d)
-
         activity = (self.level > self.rec_threshold)
+
+        if len(self.on_data) > 0:
+            on_data_res = ext.run(self.on_data, data)
+            self.queue.put(on_data_res)
 
         if self.activity and not activity:
             self.timers["activity_end"] = time()
@@ -133,9 +136,6 @@ class RCAudio(RCWorker):
                 while not self.stop_signal:
                     data = self.buffer_queue.get()
 
-                    if len(self.on_data) > 0:
-                        on_data_res = ext.run(self.on_data, data)
-                        self.queue.put(on_data_res)
 
                     st = self.get_state()
                     if (st == RCAudioState.WRITING) or (st == RCAudioState.HOLDING):

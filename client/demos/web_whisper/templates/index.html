@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>RCAudio Whisper Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <script type="text/javascript" src="js/robocapture.js"></script>
+    <h1>RoboCapture Debug</h1>
+    <pre id="output"></pre>
+    <script type="text/javascript">
+      const elemOut = document.getElementById("output");
+
+      rc = new RoboCapture("localhost", 9002, (d) => {
+        console.log(d);
+        elemOut.innerHTML = d;
+      })
+    </script>
+  </body>
+</html>

@@ -3,10 +3,11 @@
   "device": "tests/media/video.mp4",
   "on_data": [
     {
+      "enabled": true,
       "name": "ext_yolo",
       "path": "ext/video/yolo.py",
       "config": {
-        "weights": "models/yolo11n.pt",
+        "weights": "res/yolo11n.pt",
         "cpu": false,
         "min_conf": 0.5,
         "img_size": [
@@ -21,10 +22,11 @@
       }
     },
     {
+      "enabled": true,
       "name": "ext_yunet",
       "path": "ext/video/yunet.py",
       "config": {
-        "weights": "models/face_detection_yunet_2023mar_int8bq.onnx",
+        "weights": "res/face_detection_yunet_2023mar_int8bq.onnx",
         "cpu": false,
         "img_size": [
           640,
