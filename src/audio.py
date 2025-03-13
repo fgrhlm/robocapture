@@ -90,8 +90,8 @@ class RCAudio(RCWorker):
         activity = (self.level > self.rec_threshold)
 
         if len(self.on_data) > 0:
-            on_data_res = ext.run(self.on_data, data)
-            self.queue.put(on_data_res)
+            on_data_results = ext.run(self.on_data, d)
+            self.queue.put(on_data_results)
 
         if self.activity and not activity:
             self.timers["activity_end"] = time()
@@ -152,16 +152,6 @@ class RCAudio(RCWorker):
                 on_save_results = ext.run(self.on_save, clip_name)
                 self.queue.put(on_save_results)
             os.remove(clip_name)
-
-            meta = {
-                "name": "meta",
-                "data": {
-                    "level": 0,
-                    "activity": 0
-                }
-            }
-
-            self.queue.put(meta)
             self.set_state(RCAudioState.LISTENING)
 
 

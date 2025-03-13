@@ -6,10 +6,11 @@
   "blksize": 128,
   "max_clip_len": 3,
   "mode": "voice_activity",
-  "rec_threshold": 0.4,
-  "rec_hold": 0.1,
+  "rec_threshold": 0.3,
+  "rec_hold": 0.5,
   "on_save": [
     {
+      "enabled": true,
       "name": "ext_whisper",
       "path": "ext/audio/whisper.py",
       "config": {
@@ -19,6 +20,7 @@
   ],
   "on_data": [
     {
+      "enabled": true,
       "name": "ext_meta",
       "path": "ext/audio/meta.py",
       "config": {}

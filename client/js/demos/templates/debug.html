@@ -9,20 +9,41 @@
   </head>
   <body>
     <script type="text/javascript" src="js/robocapture.js"></script>
-    <h1>RoboCapture Debug</h1>
-    <hr>
     <div class="app">
-      <h2><span id="audio_status" class="fg-green">●</span>RCAudio</h2>
+      <h1>RoboCapture Debug</h1>
+      <br>
+      <h2>RCAudio</h2>
       <div id="audio">
+        <div id="info">
+          <p class="info-row"><span>Connection: </span><span></span></p>
+          <p class="info-row"><span>Host: </span><span></span></p>
+          <p class="info-row"><span>Port: </span><span></span></p>
+          <p class="info-row"><span>Sample Rate: </span><span></span></p>
+          <p class="info-row"><span>Channels: </span><span></span></p>
+          <p class="info-row"><span>Block Size: </span><span></span></p>
+          <p class="info-row"><span>Record Threshold: </span><span></span></p>
+          <p class="info-row"><span>Record Hold: </span><span></span></p>
+        </div>
+        <div id="monitor">
+          <meter id="audio_level" min="0" max="2.5" low="0.1" high="1.5" optimum="0.8" value="1.8"></meter>
+        </div>
       </div>
-      <hr>
-      <h2><span id="video_status" class="fg-green">●</span>RCVideo</h2>
-      <div id="viz">
+      <h2>RCVideo</h2>
+      <div id="video">
+        <div id="info">
+          <p class="info-row"><span>Connection: </span><span></span></p>
+          <p class="info-row"><span>Host: </span><span></span></p>
+          <p class="info-row"><span>Port: </span><span></span></p>
+          <p class="info-row"><span>Sample Rate: </span><span></span></p>
+          <p class="info-row"><span>Channels: </span><span></span></p>
+          <p class="info-row"><span>Block Size: </span><span></span></p>
+          <p class="info-row"><span>Record Threshold: </span><span></span></p>
+          <p class="info-row"><span>Record Hold: </span><span></span></p>
+        </div>
         <canvas id="c_frame" width="640" height="360">
       </div>
-      <hr>
       <h2>Ext</h2>
-      <div id="results">
+      <div id="ext">
         <div class="data-container">
           <span class="container-title bg-1">yolo</span>
           <hr>
@@ -44,7 +65,7 @@
       const e_yolo = document.getElementById("output_yolo");
       const e_yunet = document.getElementById("output_yunet");
       const e_whisper = document.getElementById("output_whisper");
-      const e_audio_level = document.getElementById("level");
+      const e_audio_level = document.getElementById("audio_level");
 
       const e_canvas = document.getElementById("c_frame");
       const e_canvas_frame = new OffscreenCanvas(640,360);
@@ -74,6 +95,32 @@
         ctx.stroke();
       }
 
+      const processAudioResults = (results) => {
+        results.forEach((result) => {
+          if(result["name"] === "whisper") {
+            const d = result["data"]
+            const ts = new Date().toLocaleTimeString("en-US");
+
+            const e_li = document.createElement("li");
+            const e_cont = document.createElement("div");
+            const e_ts = document.createElement("p");
+            const e_text = document.createElement("p");
+
+            e_ts.innerText = ts;
+            e_text.innerText = `[${d["lang"]}]: ${d["text"]}`;
+
+            e_cont.appendChild(e_ts);
+            e_cont.appendChild(e_text);
+            e_li.appendChild(e_cont);
+            e_whisper.appendChild(e_li);
+          }
+
+          if(result["name"] === "meta"){
+            e_audio_level.value = result["data"]["level"]
+          }
+        });
+      }
+
       const processVideoResults = (results) => {
         e_yolo.innerText = "";
         e_yunet.innerText = "";
@@ -83,8 +130,8 @@
             ctx_yolo.clearRect(0,0,e_canvas_yolo.width,e_canvas_yolo.height);
             result["data"].forEach((d) => {
               let e_li = document.createElement("li");
-              let e_name = document.createElement("span");
-              let e_conf = document.createElement("span");
+              let e_name = document.createElement("p");
+              let e_conf = document.createElement("p");
               e_name.innerText = d["class"];
               e_conf.innerText = d["conf"].toFixed(2);
 
@@ -111,8 +158,8 @@
             ctx_yunet.clearRect(0,0,e_canvas_yunet.width,e_canvas_yunet.height);
             result["data"].forEach((d) => {
               let e_li = document.createElement("li");
-              let e_name = document.createElement("span");
-              let e_conf = document.createElement("span");
+              let e_name = document.createElement("p");
+              let e_conf = document.createElement("p");
               e_name.innerText = d["class"];
               e_conf.innerText = d["conf"].toFixed(2);
 
@@ -150,9 +197,9 @@
         processVideoResults(results);
       });
 
-      //rcAudio = new RoboCapture("localhost", 9001, (results) => {
-      //  processAudioResults(results);
-      //});
+      rcAudio = new RoboCapture("localhost", 9001, (results) => {
+        processAudioResults(results);
+      });
     </script>
   </body>
 </html>

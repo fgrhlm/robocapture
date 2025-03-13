@@ -20,10 +20,13 @@ class RCWhisper:
         #result = whisper.decode(self.model, mel, options)
         try:
             result = self.model.transcribe(clip)
+            result = { "lang": result["language"], "text": result["text"] }
         except Exception as e:
             logging.error(f"Could not transcribe: {clip}")
 
         results = {"name": "whisper", "data": result}
+
+        print(results)
 
         return results
 
