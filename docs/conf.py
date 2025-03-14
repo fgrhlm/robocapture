@@ -1,7 +1,8 @@
 import sys
-from pathlib import Path
+import pathlib
 
-sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
+# add rc sources to path
+sys.path.insert(0, str(pathlib.Path("..","src").resolve()))
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -11,31 +12,26 @@ sys.path.insert(0, str(Path('..', '..', 'src').resolve()))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'RoboCapture'
-copyright = '2025, Joel Fagerholm'
-author = 'Joel Fagerholm'
-release = '0.1'
+project = 'Robocapture'
+copyright = '2025, fgrhlm'
+author = 'fgrhlm'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.doctest",
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary"
+    "sphinx.ext.githubpages",
+    "sphinx.ext.todo",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.duration"
 ]
 
-autosummary_generate = True
-
 templates_path = ['_templates']
-exclude_patterns = []
-
-
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'furo'
+html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']

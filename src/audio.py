@@ -24,11 +24,6 @@ from time import time
 # https://stackoverflow.com/questions/40138031/how-to-read-realtime-microphone-audio-volume-in-python-and-ffmpeg-or-similar
 # https://stackoverflow.com/questions/26541416/generate-temporary-file-names-without-creating-actual-file-in-python
 
-"""
-    TODO:
-    - Fix max clip len, defined in config, enforced by checking current file size
-
-"""
 class RCAudioState(Enum):
     STOPPED = 0
     WRITING = 1
