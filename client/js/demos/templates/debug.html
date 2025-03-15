@@ -8,41 +8,28 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <script type="text/javascript" src="js/robocapture.js"></script>
     <div class="app">
-      <h1>RoboCapture Debug</h1>
-      <br>
-      <h2>RCAudio</h2>
+      <h2>Audio</h2>
       <div id="audio">
-        <div id="info">
-          <p class="info-row"><span>Connection: </span><span></span></p>
-          <p class="info-row"><span>Host: </span><span></span></p>
-          <p class="info-row"><span>Port: </span><span></span></p>
-          <p class="info-row"><span>Sample Rate: </span><span></span></p>
-          <p class="info-row"><span>Channels: </span><span></span></p>
-          <p class="info-row"><span>Block Size: </span><span></span></p>
-          <p class="info-row"><span>Record Threshold: </span><span></span></p>
-          <p class="info-row"><span>Record Hold: </span><span></span></p>
-        </div>
+        <ul id="audio_config" class="v-split"></ul>
         <div id="monitor">
-          <meter id="audio_level" min="0" max="2.5" low="0.1" high="1.5" optimum="0.8" value="1.8"></meter>
+          <span>
+            <p>Input: </p>
+            <div id="meter-stack">
+              <meter id="audio_level" min="0" max="2.5" low="0.1" high="1.5" optimum="0.8" value="1.8"></meter>
+              <p id="audio_level_label"></p>
+            </div>
+          </span>
         </div>
       </div>
-      <h2>RCVideo</h2>
+      <h2>Video</h2>
       <div id="video">
-        <div id="info">
-          <p class="info-row"><span>Connection: </span><span></span></p>
-          <p class="info-row"><span>Host: </span><span></span></p>
-          <p class="info-row"><span>Port: </span><span></span></p>
-          <p class="info-row"><span>Sample Rate: </span><span></span></p>
-          <p class="info-row"><span>Channels: </span><span></span></p>
-          <p class="info-row"><span>Block Size: </span><span></span></p>
-          <p class="info-row"><span>Record Threshold: </span><span></span></p>
-          <p class="info-row"><span>Record Hold: </span><span></span></p>
+        <ul id="video_config" class="v-split"></ul>
+        <div id="frame-container">
+          <canvas id="c_frame" width="640" height="360">
         </div>
-        <canvas id="c_frame" width="640" height="360">
       </div>
-      <h2>Ext</h2>
+      <h2>Workers</h2>
       <div id="ext">
         <div class="data-container">
           <span class="container-title bg-1">yolo</span>
@@ -61,11 +48,17 @@
         </div>
       </div>
     </div>
-    <script type="text/javascript">
+    <script type="module">
+      import { Client, Hooks, Callback } from "/js/robocapture.js";
+
       const e_yolo = document.getElementById("output_yolo");
       const e_yunet = document.getElementById("output_yunet");
       const e_whisper = document.getElementById("output_whisper");
       const e_audio_level = document.getElementById("audio_level");
+      const e_audio_level_label = document.getElementById("audio_level_label");
+
+      const e_audio_config = document.getElementById("audio_config");
+      const e_video_config = document.getElementById("video_config");
 
       const e_canvas = document.getElementById("c_frame");
       const e_canvas_frame = new OffscreenCanvas(640,360);
@@ -95,8 +88,47 @@
         ctx.stroke();
       }
 
-      const processAudioResults = (results) => {
+      const populateConfigElem = (target, result) => {
+        const conf = result["data"];
+
+        Object.keys(conf).forEach(k => {
+          const e_p = document.createElement("li");
+          e_p.className = "info-row";
+
+          const e_s1 = document.createElement("span");
+          const e_s2 = document.createElement("span");
+          e_s2.className="fg-green";
+
+          e_s1.innerText = k;
+
+          if(k === "on_save" || k === "on_data"){
+            let s = "";
+            conf[k].forEach(n => {
+              s += `${n["name"]} `;
+            })
+
+            e_s2.innerText = s;
+          }else if(k === "socket" || k === "log"){
+            e_s2.innerText = JSON.stringify(conf[k]);
+          }else{
+            e_s2.innerText = conf[k];
+          }
+
+          e_p.appendChild(e_s1);
+          e_p.appendChild(e_s2);
+
+          target.appendChild(e_p);
+        });
+      }
+
+      const processAudioResults = (event) => {
+        const results = JSON.parse(event.data);
+
         results.forEach((result) => {
+          if(result["name"] === "server_config"){
+            populateConfigElem(e_audio_config, result);
+          }
+
           if(result["name"] === "whisper") {
             const d = result["data"]
             const ts = new Date().toLocaleTimeString("en-US");
@@ -117,15 +149,22 @@
 
           if(result["name"] === "meta"){
             e_audio_level.value = result["data"]["level"]
+            e_audio_level_label.innerText = (result["data"]["level"]).toFixed(2);
           }
         });
       }
 
-      const processVideoResults = (results) => {
+      const processVideoResults = (event) => {
+        const results = JSON.parse(event.data);
+
         e_yolo.innerText = "";
         e_yunet.innerText = "";
 
         results.forEach((result) => {
+          if(result["name"] === "server_config"){
+            populateConfigElem(e_video_config, result);
+          }
+
           if(result["name"] === "yolo") {
             ctx_yolo.clearRect(0,0,e_canvas_yolo.width,e_canvas_yolo.height);
             result["data"].forEach((d) => {
@@ -148,9 +187,9 @@
               let h = box["h"];
               drawRect(ctx_yolo,x,y,w,h,"blue");
 
-              ctx_yolo.font = "12px monospace";
-              ctx_yolo.fillStyle = "#FF00FF";
-              ctx_yolo.fillText(`${d["class"]}: ${d["conf"]}`, x, y);
+              ctx_yolo.font = "14px monospace";
+              ctx_yolo.fillStyle = "#000000";
+              ctx_yolo.fillText(`${d["class"]}: ${d["conf"].toFixed(2)}`, x, y-4);
             });
           }
 
@@ -193,13 +232,13 @@
         });
       };
 
-      rcVideo = new RoboCapture("localhost", 9002, (results) => {
-        processVideoResults(results);
-      });
+      const videoClient = new Client("localhost", 9002, Array(
+        new Callback(Hooks.MESSAGE, processVideoResults)
+      ));
 
-      rcAudio = new RoboCapture("localhost", 9001, (results) => {
-        processAudioResults(results);
-      });
+      const audioClient = new Client("localhost", 9001, Array(
+        new Callback(Hooks.MESSAGE, processAudioResults)
+      ));
     </script>
   </body>
 </html>

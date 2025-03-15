@@ -40,7 +40,7 @@ class RCServer:
         )
 
         self.socket = RCWebSocket(
-            self.config.get("socket"),
+            self.config,
             self.share
         )
 

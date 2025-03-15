@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Debug</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script type="text/javascript" src="js/robocapture.js"></script>
+    <div class="app">
+      <h1>RoboCapture Debug</h1>
+    </div>
+    <script type="text/javascript">
+      rcVideo = new RoboCapture("localhost", 9002, (results) => {
+        processVideoResults(results);
+      });
+    </script>
+  </body>
+</html>

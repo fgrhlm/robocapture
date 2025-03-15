@@ -14,7 +14,7 @@
       "name": "ext_whisper",
       "path": "ext/audio/whisper.py",
       "config": {
-        "weights": "tiny.en"
+        "weights": "tiny"
       }
     }
   ],

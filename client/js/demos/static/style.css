@@ -45,8 +45,6 @@ ul {
   padding: 4px;
   margin: 0;
   list-style: none;
-  overflow-x: hidden;
-  overflow-y: scroll;
 }
 
 li {
@@ -76,7 +74,7 @@ meter {
   border: 1px solid black;
   border-radius: 0;
   background: none;
-  background-color: white;
+  background-color: transparent;
 }
 
 :-moz-meter-optimum::-moz-meter-bar {
@@ -107,6 +105,10 @@ meter {
 
 .fg-green { color: green; }
 .fg-red { color: red; }
+
+.v-split {
+  border-right: 1px solid black;
+}
 
 .app {
   max-width: 1000px;
@@ -153,7 +155,31 @@ meter {
   justify-content: space-between;
 }
 
+#audio_level {
+  top: 0;
+  left: 0;
+  position: absolute;
+}
+
+#audio_level_label {
+  padding-top: 3px;
+  display: flex;
+  font-weight: bold;
+  font-family: monospace;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  left: 0;
+  top: 0;
+}
+
+#meter-stack {
+  position: relative;
+}
+
 #video {
+  text-align: center;
   padding: 16px;
   display: flex;
   justify-content: space-between;
@@ -163,7 +189,7 @@ meter {
   width: 100%;
 }
 
-#info {
+#audio_config, #video_config {
   padding: 16px;
 }
 
@@ -179,13 +205,12 @@ meter {
   display: flex;
 }
 
-#video {
-  padding: 16px;
-  text-align: center;
-}
-
 #output-whisper li {
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+}
+
+#frame-container {
+  padding: 16px;
 }

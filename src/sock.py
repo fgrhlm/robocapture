@@ -2,6 +2,7 @@ import sys
 import json
 import logging
 
+from time import thread_time
 from worker import RCWorker
 from queue import Queue, Empty
 from threading import Event
@@ -12,7 +13,8 @@ from websockets.sync.server import serve
 class RCWebSocket(RCWorker):
     """Pops detection results of a queue and serves them to clients via a websocket"""
     def __init__(self, config, queue):
-        RCWorker.__init__(self, "socket", config, queue)
+        RCWorker.__init__(self, "socket", config.get("socket"), queue)
+        self.server_config = config
         self.port = self.config["port"] or 9001
         self.socket = None
 
@@ -38,7 +40,15 @@ class RCWebSocket(RCWorker):
 
         def handler(ws):
             logging.debug("Client connected!")
+
+            init_payload = self.preprocess_payload([{
+                "name": "server_config",
+                "data": self.server_config.json
+            }])
+
             try:
+                ws.send(init_payload)
+
                 while True:
                     if self.stop_signal:
                         break
