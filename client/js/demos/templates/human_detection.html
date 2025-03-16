@@ -8,14 +8,50 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <script type="text/javascript" src="js/robocapture.js"></script>
-    <div class="app">
-      <h1>RoboCapture Debug</h1>
+    <div id="app-human">
+      <h1>Face/Person Detection</h1>
+      <br />
+      <div id="human-info-per" class="yellow">
+        <h3 id="human-info-per-status">I see no humans around..</h3>
+      </div>
+      <div id="human-info-face" class="blue">
+        <h3 id="human-info-face-status">I see no faces..</h3>
+      </div>
     </div>
-    <script type="text/javascript">
-      rcVideo = new RoboCapture("localhost", 9002, (results) => {
-        processVideoResults(results);
-      });
+    <script type="module">
+      import { Client, Hooks, Callback } from "/js/robocapture.js";
+
+      const e_per_status = document.getElementById("human-info-per-status");
+      const e_face_status = document.getElementById("human-info-face-status");
+
+      const detectHumans = (e) => {
+        const results = JSON.parse(event.data);
+
+        e_per_status.innerText = "";
+        e_per_status.innerText = "";
+
+        results.forEach((result) => {
+          if(result["name"] === "server_config") return;
+
+          if(result["name"] === "yolo"){
+            const data = result["data"];
+
+            const persons = data.filter(n => n["class"] === "person");
+            e_per_status.innerText = `I can see (${persons.length}) persons!`;
+          }
+
+          if(result["name"] === "yunet"){
+            const data = result["data"];
+            e_face_status.innerText = `I can see (${data.length}) faces!`;
+          }
+        });
+      };
+
+      const videoClient = new Client(
+        "localhost",
+        9002,
+        Array(new Callback(Hooks.MESSAGE, detectHumans)),
+      );
     </script>
   </body>
 </html>

@@ -268,3 +268,30 @@ meter {
 .yellow { background-color: lemonchiffon; }
 .purple { background-color: plum; }
 .white { background-color: white; }
+
+#app-human {
+  padding-top: 48px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#app-human h1,h2,h3,h4 {
+  background-color: inherit;
+  color: black;
+}
+
+#human-info-per, #human-info-face {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid black;
+  border-radius: 8px;
+  width: 400px;
+  height: 150px;
+  justify-content: center;
+  align-items: center;
+  margin: 16px;
+}

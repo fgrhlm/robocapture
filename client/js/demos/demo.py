@@ -3,6 +3,7 @@ import os
 import shutil
 
 from flask import Flask, render_template
+from livereload import Server
 
 def run():
     app = Flask(
@@ -11,6 +12,8 @@ def run():
         template_folder="templates",
         static_url_path=""
     )
+
+    app.debug = True
 
     @app.route("/debug")
     def root():
@@ -24,7 +27,9 @@ def run():
     def human_recognition():
         return render_template("human_detection.html")
 
-    app.run(debug=True)
+    server = Server(app.wsgi_app)
+    server.watch(".")
+    server.serve()
 
 if __name__=="__main__":
     print(f"Copying robocapture client..")
