@@ -2,11 +2,11 @@ import whisper
 import logging
 import numpy as np
 
-class RCWhisper:
-    def __init__(self, config: dict):
-        self.name = "whisper"
-        self.config = config
+from src.ext import RCExtWorker
 
+class RCWhisper(RCExtWorker):
+    def __init__(self, config: dict):
+        RCExtWorker.__init__(self, "whisper", config)
         logging.info(f"Loading whisper model {self.config['weights']}..")
         self.model = whisper.load_model(self.config["weights"],download_root="res")
 

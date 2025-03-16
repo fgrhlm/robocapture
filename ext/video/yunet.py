@@ -5,13 +5,14 @@ import numpy as np
 
 from cv2.dnn import DNN_BACKEND_CUDA,DNN_BACKEND_OPENCV,DNN_TARGET_CPU,DNN_TARGET_CUDA
 
+from src.ext import RCExtWorker
+
 # https://docs.opencv.org/4.x/df/d20/classcv_1_1FaceDetectorYN.html
 # https://opencv.org/blog/opencv-face-detection-cascade-classifier-vs-yunet/
 
 class RCYunet:
     def __init__(self, config):
-        self.name = "yunet"
-        self.config = config
+        RCExtWorker.__init__(self, "yunet", config)
         self.config["img_size"] = [int(n/2) for n in self.config["img_size"]]
 
         self.yunet = cv.FaceDetectorYN.create(

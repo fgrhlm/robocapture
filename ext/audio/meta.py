@@ -2,16 +2,17 @@ import whisper
 import logging
 import numpy as np
 
-class RCAudioMeta:
+from src.ext import RCExtWorker
+
+class RCAudioMeta(RCExtWorker):
     def __init__(self, config: dict):
-        self.name = "audio-meta"
-        self.config = config
+        RCExtWorker.__init__(self, "meta_audio", config)
 
     def process(self, data):
         level = np.linalg.norm(data)
 
         return {
-            "name": "meta",
+            "name": self.name,
             "data": {
                 "level": float(level)
             }

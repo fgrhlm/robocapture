@@ -5,6 +5,7 @@ import numpy as np
 import ext
 
 from worker import RCWorker
+from ext import RCExtWorker
 from uuid import uuid1
 from enum import Enum
 from sounddevice import InputStream
@@ -32,7 +33,28 @@ class RCAudioState(Enum):
     PIPELINE_EXEC = 4
 
 class RCAudio(RCWorker):
+    """
+    **RCAudio** is a wrapper around
+    `python-sounddevice <https://github.com/spatialaudio/python-sounddevice>`_ and
+    `python-soundfile <https://github.com/bastibe/python-soundfile>`_
+    """
     def __init__(self, config, queue, on_data, on_save):
+        """
+        :param: config: RCAudio config.
+        :type config: dict
+
+        :param: queue: The shared queue onto which results will be pushed.
+        :type queue: Queue
+
+        :param: on_data: A list of external workers that are executed when new data is received.
+        :type on_data: list[RCExtWorker]
+
+        :param: on_save: A list of external workers that are executed when a new clip is saved to file.
+        :type on_save: list[RCExtWorker]
+
+        :param: config: RCAudio config.
+        :type config: dict
+        """
         RCWorker.__init__(self, "audio", config, queue, on_data=on_data, on_save=on_save)
         self.state = RCAudioState.STOPPED
         self.level = 0

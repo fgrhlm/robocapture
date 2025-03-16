@@ -1,0 +1,36 @@
+{
+  "server_type": "audio",
+  "device": 0,
+  "sample_rate": 44100,
+  "channels": 1,
+  "blksize": 128,
+  "max_clip_len": 3,
+  "mode": "voice_activity",
+  "rec_threshold": 0.3,
+  "rec_hold": 0.5,
+  "on_save": [
+    {
+      "enabled": true,
+      "name": "ext_whisper",
+      "path": "ext/audio/whisper.py",
+      "config": {
+        "weights": "tiny"
+      }
+    }
+  ],
+  "on_data": [
+    {
+      "enabled": false,
+      "name": "ext_meta",
+      "path": "ext/audio/meta.py",
+      "config": {}
+    }
+  ],
+  "socket": {
+    "host": "127.0.0.1",
+    "port": 9001
+  },
+  "log": {
+    "logLevel": "NOTSET"
+  }
+}

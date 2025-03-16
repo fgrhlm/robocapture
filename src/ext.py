@@ -4,6 +4,12 @@ import os
 
 from importlib.util import module_from_spec, spec_from_file_location
 
+class RCExtWorker:
+    def __init__(self, name, config):
+        self.name = name
+        self.config = config
+        logging.debug(f"Creating new worker: {self.name}")
+
 def load_modules(config, event):
     mod_list = config.get(event)
     modules = []

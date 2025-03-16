@@ -4,14 +4,15 @@ import cv2 as cv
 import numpy as np
 
 from base64 import b64encode
+from src.ext import RCExtWorker
 
 class RCFrameB64:
     def __init__(self, config):
-        self.name = "frameb64"
+        RCExtWorker.__init__(self, "frame", config)
 
     def process(self, frame):
         return {
-            "name": "frame",
+            "name": self.name,
             "data": b64encode(cv.imencode(".jpg", frame)[1]).decode()
         }
 

@@ -8,16 +8,17 @@ import json
 from ultralytics import YOLO
 from ultralytics.engine.results import Results
 
+from src.ext import RCExtWorker
+
 # https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html
 # https://docs.ultralytics.com/modes/predict/
 # https://www.geeksforgeeks.org/object-detection-with-yolo-and-opencv/
 # https://github.com/ultralytics/ultralytics/blob/main/docs/en/usage/simple-utilities.md
 # https://docs.ultralytics.com/modes/predict/#inference-arguments
 
-class RCYolo:
+class RCYolo(RCExtWorker):
     def __init__(self, config):
-        self.name = "yolo"
-        self.config = config
+        RCExtWorker.__init__(self, "yolo", config)
 
         self.yolo = YOLO(
             self.config["weights"],

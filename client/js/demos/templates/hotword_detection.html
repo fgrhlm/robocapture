@@ -8,14 +8,55 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <script type="text/javascript" src="js/robocapture.js"></script>
-    <div class="app">
-      <h1>Hotword Detection</h1>
+    <div id="app-hotword">
+      <div id="hotword-info">
+        <h2>You can change the color of this page using your voice!</h2>
+        <br>
+        <i>Try saying any of the following:</i>
+        <ul>
+          <li class="red">Red</li>
+          <li class="blue">Blue</li>
+          <li class="yellow">Yellow</li>
+          <li class="purple">Purple</li>
+          <li class="white">White</li>
+        </ul>
+      </div>
     </div>
-    <script type="text/javascript">
-      rcAudio = new RoboCapture("localhost", 9001, (results) => {
-        processAudioResults(results);
-      });
+    <script type="module">
+      import { Client, Hooks, Callback } from "/js/robocapture.js";
+
+      const setBg = color => { document.body.style.background = color; }
+
+      const words = {
+        "red": "lightcoral",
+        "blue": "lightskyblue",
+        "yellow": "lemonchiffon",
+        "purple": "plum",
+        "white": "white"
+      }
+
+      const detectHotword = (e) => {
+        const results = JSON.parse(e.data);
+
+        results.forEach(n => {
+          if(n["name"] != "whisper") return;
+
+          const result = n["data"];
+          const text = result["text"]
+            .toLowerCase()
+
+          console.log(text);
+          Object.keys(words).forEach((k,v) => {
+            if(text.includes(k)){
+              setBg(words[k]);
+            }
+          })
+        });
+      }
+
+      const audioClient = new Client("localhost", 9001, Array(
+        new Callback(Hooks.MESSAGE, detectHotword)
+      ));
     </script>
   </body>
 </html>
