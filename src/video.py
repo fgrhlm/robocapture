@@ -10,6 +10,8 @@ class RCVideo(RCWorker):
         RCWorker.__init__(self,"video",config, queue, on_data=on_data, on_save=on_save)
         self.timer = TickMeter()
         self.device = self.config.get("device")
+        self.fps = 0
+        self.hist_fps = []
 
         try:
             logging.debug(f"Opening VideoCapture: {self.device}")
@@ -35,10 +37,13 @@ class RCVideo(RCWorker):
             self.timer.start()
             ret, frame = self.stream.read()
 
-            # DEBUG DEBUG DEBUG
             if not ret:
-                self.stream.set(CAP_PROP_POS_FRAMES, 0)
-                continue
+                self.stop()
+                break
+            # DEBUG DEBUG DEBUG
+            #if not ret:
+            #    self.stream.set(CAP_PROP_POS_FRAMES, 0)
+            #    continue
             # DEBUG DEBUG DEBUG
 
             on_data_results = ext.run(self.on_data, frame)
@@ -46,8 +51,10 @@ class RCVideo(RCWorker):
 
             self.timer.stop()
             self.fps = self.timer.getFPS()
+            self.hist_fps.append(self.fps)
 
         self.stream.release()
         logging.info("RCVideo stopped!")
+        logging.info(f"Average FPS: {sum(self.hist_fps) / len(self.hist_fps)}")
 
 new = RCVideo

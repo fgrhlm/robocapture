@@ -13,22 +13,29 @@
       "name": "ext_yolo",
       "path": "ext/video/yolo.py",
       "config": {
-        "weights": "res/yolo11n.pt",
-        "cpu": false,
+        "model_format": "tensor_rt",
+        "weights": "res/yolov8n.pt",
+        "cpu": true,
         "min_conf": 0.5,
         "img_size": [
           640,
-          364
+          360
         ],
         "stream": true,
         "verbose": false,
         "fp16": true,
         "max_detect": 30,
-        "vid_stride": 1
+        "vid_stride": 1,
+        "export_config": {
+          "onnx": { "simplify": true, "half": true, "nms": true},
+          "openvino": { "half": false, "nms": true, "int8": true, "data": "coco8.yaml"},
+          "tensor_rt": { "simplify": true, "half": false, "nms": true, "int8": true, "data": "coco8.yaml"},
+          "tflite": { "half": false, "nms": true, "int8": true, "data": "coco8.yaml"}
+        }
       }
     },
     {
-      "enabled": true,
+      "enabled": false,
       "name": "ext_yunet",
       "path": "ext/video/yunet.py",
       "config": {
