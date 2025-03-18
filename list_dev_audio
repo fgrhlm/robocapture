@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import sounddevice as sd
+
+if __name__=="__main__":
+    for n in sd.query_devices():
+        print(f"{'='*24}")
+        print(f"Name: {n["name"]}")
+        print(f"Device Index: {n["index"]}")
