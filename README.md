@@ -4,16 +4,6 @@
 
 <hr>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-
-[![GitHub commits](https://badgen.net/github/commits/fgrhlm/robocapture)](https://GitHub.com/fgrhlm/robocapture/commit/)
-
-[![GitHub latest commit](https://badgen.net/github/last-commit/fgrhlm/robocapture)](https://GitHub.com/fgrhlm/robocapture/commit/)
-
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com)
-
-<hr>
-
 - [Installation](#installation)
   - [Linux](#linux)
   - [Docker](#docker)
