@@ -1,0 +1,15 @@
+services:
+  robocapture:
+    build:
+      dockerfile: ./Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+    volumes:
+      - /run/user/1000/pulse:/run/user/1000/pulse

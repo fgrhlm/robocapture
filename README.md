@@ -33,7 +33,12 @@
 
 <h3 id="linux">Linux</h4>
 
-<h4>Step 1: Installing Python</h4>
+For GPU support:
+
+`cuDNN == 9.3`
+`cuda == 12.5`
+
+<h4>Installing Python</h4>
 
 RoboCapture expects python version `3.12.9`. If your distro does not
 provide a package for this specific version (it probably does not) you
@@ -60,17 +65,19 @@ Follow official instructions [here](https://www.python.org/downloads/release/pyt
 
 Follow official instructions [here](https://docs.python.org/3.12/using/unix.html#building-python)
 
-<h4>Step 2: Python venv</h4>
+<h4>Python venv</h4>
 
 Create and activate virtualenv:
 
 `python -m venv venv && source venv/bin/activate`
 
-<h4>Step 3: Install dependencies</h4>
+<h4>Install python dependencies</h4>
 
 `pip install -r requirements.txt`
 
 <h3 id="docker">Docker</h4>
+
+Install [Nvidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 
 <h4>WIP</h4>
 
@@ -142,6 +149,13 @@ RCAudio specific
 
 <h4 id="yolo">Yolo</h4>
 
+More on model formats [here](https://docs.ultralytics.com/modes/export/)
+
+`model_format`: Yolo model format. Can be one of the following: `pytorch`, `onnx`, `openvino`,`tensor_rt`,`tflite`
+
+`weights`: Path to model weights.
+
+`min_conf`: Confidence threshold for positive detection result.
 <h4 id="yunet">Yunet</h4>
 
 <h4 id="whisper">Whisper</h4>

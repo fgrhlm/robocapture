@@ -1,0 +1,10 @@
+venv/
+client/
+datasets/
+docs/
+.git/
+.gitignore
+.LICENSE
+README.md
+res/
+tests/

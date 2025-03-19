@@ -10,6 +10,15 @@
     },
     {
       "enabled": true,
+      "name": "ext_mobilenet_v2",
+      "path": "ext/video/mobilenet_v2.py",
+      "config": {
+        "weights": "imagenet",
+        "img_size": [224, 224]
+      }
+    },
+    {
+      "enabled": false,
       "name": "ext_yolo",
       "path": "ext/video/yolo.py",
       "config": {
@@ -17,10 +26,7 @@
         "weights": "res/yolov8n.pt",
         "cpu": true,
         "min_conf": 0.5,
-        "img_size": [
-          640,
-          360
-        ],
+        "img_size": [640,360],
         "stream": true,
         "verbose": false,
         "fp16": true,
@@ -41,10 +47,7 @@
       "config": {
         "weights": "res/face_detection_yunet_2023mar_int8bq.onnx",
         "cpu": false,
-        "img_size": [
-          640,
-          360
-        ],
+        "img_size": [640,360],
         "min_detect": 0.7,
         "max_nms": 0.3,
         "top_k": 5000
