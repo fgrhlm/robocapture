@@ -5,11 +5,22 @@ import sys
 import logging
 import importlib
 
+py_ver = sys.version
+in_venv = sys.prefix != sys.base_prefix
+
+print(f"{'='*24}")
+print(f"Python version: {py_ver}")
+print(f"Virtual Env ({in_venv})\n\tPrefix: {sys.prefix}\n\tBase Prefix: {sys.base_prefix}")
+print(f"{'='*24}")
+
+
 run_root = os.path.join(os.getcwd(), "src")
 sys.path.insert(1, run_root)
 
 from src.config import RCConfig
 from src.server import RCServer
+
+# https://stackoverflow.com/questions/1871549/how-to-determine-if-python-is-running-inside-a-virtualenv
 
 if __name__=="__main__":
     if len(sys.argv) < 2:

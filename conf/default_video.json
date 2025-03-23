@@ -9,7 +9,7 @@
       "config": {}
     },
     {
-      "enabled": true,
+      "enabled": false,
       "name": "ext_mobilenet_v2",
       "path": "ext/video/mobilenet_v2.py",
       "config": {
@@ -18,11 +18,11 @@
       }
     },
     {
-      "enabled": false,
+      "enabled": true,
       "name": "ext_yolo",
       "path": "ext/video/yolo.py",
       "config": {
-        "model_format": "tensor_rt",
+        "model_format": "pytorch",
         "weights": "res/yolov8n.pt",
         "cpu": true,
         "min_conf": 0.5,
@@ -60,6 +60,6 @@
     "port": 9002
   },
   "log": {
-    "logLevel": "NOTSET"
+    "logLevel": "DEBUG"
   }
 }

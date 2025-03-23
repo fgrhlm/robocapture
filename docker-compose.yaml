@@ -1,5 +1,7 @@
 services:
   robocapture:
+    container_name: robocapture
+    user: 1000:1000
     build:
       dockerfile: ./Dockerfile
     deploy:
@@ -13,3 +15,6 @@ services:
       - PULSE_SERVER=unix:/run/user/1000/pulse/native
     volumes:
       - /run/user/1000/pulse:/run/user/1000/pulse
+      - ./res:/usr/src/robocapture/res
+      - ./tests:/usr/src/robocapture/tests
+      - ./conf:/usr/src/robocapture/conf

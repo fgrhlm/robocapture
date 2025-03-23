@@ -8,3 +8,5 @@ docs/
 README.md
 res/
 tests/
+Dockerfile
+docker-compose.yaml

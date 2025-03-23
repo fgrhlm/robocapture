@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+function main() {
+    python3.12 ./run_server conf/default_video.json
+}
+
+main

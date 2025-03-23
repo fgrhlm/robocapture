@@ -249,3 +249,4 @@ $RECYCLE.BIN/
 # Project
 res/
 datasets/
+.pip_cache
