@@ -29,7 +29,7 @@
         "img_size": [640,360],
         "stream": true,
         "verbose": false,
-        "fp16": true,
+        "half": true,
         "max_detect": 30,
         "vid_stride": 1,
         "export_config": {

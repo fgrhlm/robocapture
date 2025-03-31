@@ -12,15 +12,11 @@ RUN dnf -y install pulseaudio;
 
 # RoboCapture app
 FROM pulse AS setup
-WORKDIR /usr/src/robocapture
 
+WORKDIR /usr/src/robocapture
 COPY . .
 
-RUN useradd -ms /bin/bash robocapture;
-RUN chown robocapture:robocapture /usr/src/robocapture/.pip_cache;
-
-USER robocapture
-RUN pip3.12 install --cache-dir ./.pip_cache -r requirements.txt;
+RUN pip3.12 install -r requirements.txt;
 
 # App
 FROM setup AS app

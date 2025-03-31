@@ -119,7 +119,7 @@ class RCYolo(RCExtWorker):
             verbose=self.config["verbose"],
             stream=self.config["stream"],
             conf=self.config["min_conf"],
-            half=self.config["fp16"],
+            half=self.config["half"],
             max_det=self.config["max_detect"],
             vid_stride=self.config["vid_stride"]
         )
